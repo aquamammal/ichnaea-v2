@@ -113,8 +113,8 @@ Location payloads are **end-to-end encrypted** as of the E2E encryption change:
 - Backward compatible: old plaintext blocks still read (via the fallback), and identities created before this change are backfilled with a new log key + keypair on next launch.
 
 > **Known limitation:** the log key is static (no rotation), so it behaves like a long-lived shared secret — see `SECURITY.md` risk #4.
->
-> **Open issue:** contact-core **replication delivery** is currently broken — the newline-JSON handshake and Hypercore's noise/protomux replication share the same Hyperswarm connection, which corrupts the replication stream. The log-key *exchange* works live, but blocks are not delivered, so a contact's pin does not update end-to-end yet. This is a pre-existing issue (not introduced by the encryption change) and is the next blocker for any live two-party flow.
+
+**Transport note:** the Hyperswarm connection is a `@hyperswarm/secret-stream`. The app opens a single Protomux over it (stored at the stream's `userData`) and shares it between the `ichnaea-handshake` channel (hello + sealed-box log-key exchange) and Hypercore replication (`core.replicate(mux)`). Each side also serves its own local core on the connection (`serveLocalCore`), so a contact's RAM copy can pull your check-ins. This multiplexing is what makes two-way live sync work; previously the raw newline-JSON handshake and Hypercore's protocol corrupted each other on the shared stream.
 
 ---
 

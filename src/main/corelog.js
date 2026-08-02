@@ -1,5 +1,6 @@
 import Hypercore from 'hypercore'
 import RAM from 'random-access-memory'
+import Protomux from 'protomux'
 import b4a from 'b4a'
 import { encrypt, decrypt } from '../crypto.js'
 import { dataDir, resolveFs } from './fsx.js'
@@ -61,13 +62,20 @@ export async function readLatest (core, logKey) {
 // --- Contact core replication ------------------------------------------------
 
 // Open a RAM core for a contact's core key and replicate it over a live
-// Hyperswarm connection. Returns the core; the caller polls core.length and
-// readLatest(). RAM storage means contact history is not cached across restarts.
+// Hyperswarm connection. The connection is a @hyperswarm/secret-stream with a
+// shared Protomux at `conn.userData` (created in src/swarm.js). We attach to
+// that same mux so replication multiplexes with the JSON handshake instead of
+// fighting it for the byte stream. Returns the core; the caller polls
+// core.length and readLatest(). RAM storage means contact history is not cached
+// across restarts.
 export async function replicateContactCore (coreKeyHex, conn) {
   const key = b4a.from(coreKeyHex, 'hex')
   const core = new Hypercore(RAM, key)
   await core.ready()
-  if (conn) core.replicate(conn)
+  const mux = conn && conn.userData && Protomux.isProtomux(conn.userData)
+    ? conn.userData
+    : conn
+  if (mux) core.replicate(mux)
   return core
 }
 

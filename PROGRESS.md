@@ -4,6 +4,24 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-02 — Fixed two-way live sync: protomux multiplexing + local-core serving
+
+**Status:** two-party replication now works end-to-end (verified live). This unblocks testing the app with another user.
+
+**The bug.** Contact-core replication never delivered: `src/swarm.js` wrote newline-JSON frames and read the Hyperswarm connection directly, while `src/main/corelog.js` `replicateContactCore` wrapped that **same** connection in Hypercore's noise/protomux protocol. The raw JSON frames were interpreted by the peer's protomux as malformed frames, which destroyed the replication stream. Separately, the app never served its own local core, so contacts had nothing to pull.
+
+**The fix.**
+- The Hyperswarm connection is a `@hyperswarm/secret-stream`. `src/swarm.js` now opens **one Protomux** over it (stored at `conn.userData`) and carries the JSON handshake (hello + sealed-box log-key exchange) on an `ichnaea-handshake` protomux channel, instead of raw `conn.write`. Hypercore replication attaches to that **same** mux, so the two protocols multiplex cleanly.
+- `src/main/corelog.js` `replicateContactCore` now attaches to `conn.userData` (the shared mux) via `core.replicate(mux)`.
+- `src/swarm.js` now **serves the user's own local core** on each connection (`serveLocalCore`, idempotent per mux, with `refreshLocalCore()` re-serving after core rotation). `src/main/app.js` passes `getLocalCore` and calls `refreshLocalCore()` in `rotateCore`.
+- Added `test/e2e-encryption.mjs` + `test/e2e-child.mjs`: spawn two real app processes, exchange log keys, check in, and assert both decrypt each other's cores.
+
+**Verified:** `node test/e2e-encryption.mjs` → both workers report `gotLogKey:true` and advancing `lastSeenTs` (encrypted blocks delivered AND decrypted) → `E2E SYNC: PASS`. `npm test` 32/32. App boots cleanly.
+
+**Immediate next step:** real two-user QA on Windows (see README/TESTING.md): install Node + Pear, clone, `npm install`, `npm run dev`, exchange public keys out-of-band, add each other.
+
+---
+
 ## 2026-08-02 — X25519 end-to-end log encryption + stale-instance cleanup
 
 **Status:** location payloads are now **end-to-end encrypted**. Also cleared a stale `pear run` instance that was holding the Hypercore lock and reset a leftover manual-GPS override.

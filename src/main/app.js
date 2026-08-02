@@ -88,6 +88,7 @@ export async function createMainApp ({ pipe }) {
       identity: state.identity,
       getIntervalMs: () => state.settings.intervalMs,
       getLocalCoreKey: () => (state.localCore ? b4a.toString(state.localCore.key, 'hex') : null),
+      getLocalCore: () => state.localCore,
       getLogKey: () => state.identity.logKey,
       getEncKeyPair: () => state.identity.logEnc,
       onUpdate: (s) => {
@@ -192,6 +193,7 @@ export async function createMainApp ({ pipe }) {
     state.localCore = await openLocalCore(state.identity, state.settings.coreGeneration)
     if (old) old.close().catch(() => {})
     state.swarm.refreshHello() // re-share the new core key on the next handshake
+    state.swarm.refreshLocalCore() // serve the new local core on existing conns
     send({ type: 'status', message: 'Log rotated after ' + MAX_ENTRIES + ' check-ins' })
   }
 

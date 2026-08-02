@@ -81,4 +81,8 @@
 
 ## Automated
 
-`npm test` (using `brittle`) covers the pure logic: crypto/topic derivation, base64 validation, staleness classification, contact CRUD rules, and the X25519/secretbox encryption primitives (AEAD round-trip, wrong-key rejection, sealed-box log-key exchange). The items above are the manual end-to-end complement. Note: end-to-end contact-core replication is currently blocked by a known delivery bug (see PROGRESS.md), so live two-party pin-sync tests won't pass until it is fixed.
+`npm test` (using `brittle`) covers the pure logic: crypto/topic derivation, base64 validation, staleness classification, contact CRUD rules, and the X25519/secretbox encryption primitives (AEAD round-trip, wrong-key rejection, sealed-box log-key exchange). The items above are the manual end-to-end complement.
+
+### Two-instance E2E (live sync)
+
+`node test/e2e-encryption.mjs` spawns two separate app processes (own data dirs), has them add each other, exchange log keys via the sealed-box handshake, check in, and decrypt each other's replicated cores. It passes when both peers advance `lastSeenTs` (i.e. replication delivers and decryption works). This is the fastest way to validate the full two-party path without two machines.

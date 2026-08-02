@@ -50,7 +50,7 @@ Check-ins share whatever precision the GPS returns. For some users a coarse loca
 
 ## Hardening roadmap (priority order)
 
-1. **Fix contact-core replication over the shared connection** — the newline-JSON handshake and Hypercore's noise/protomux replication currently share one Hyperswarm connection, which corrupts the replication stream (contact cores are never delivered). Route them on separate protomux channels. *Prerequisite for any live two-party flow.*
+1. ~~Fix contact-core replication over the shared connection~~ — **DONE.** The newline-JSON handshake and Hypercore's noise/protomux replication previously shared one Hyperswarm connection and corrupted each other (contact cores were never delivered). Now the JSON handshake rides on an `ichnaea-handshake` protomux channel, and replication attaches to the **same** Protomux (see `ARCHITECTURE.md`); each side also serves its own local core so contacts can pull check-ins. Verified with a two-instance live test (both peers exchanged keys and decrypted each other's check-ins).
 2. **Safety-number / fingerprint verification UI** for the out-of-band key exchange (removes risk #2).
 3. **Log-key rotation per reconnect** (addresses #4), re-shared via the existing sealed-box handshake.
 4. **Optional location precision reduction** (addresses #6).
