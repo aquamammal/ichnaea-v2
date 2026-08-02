@@ -4,6 +4,12 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-02 — Auto-center the map/globe on your own pin on every check-in
+
+A "check in here" (manual lat/lng) already sent the `self` push and moved the self pin, but the map didn't re-center, so the pin could be off-screen and the update looked like a no-op. Added a `centerOn({lat,lng})` method to both renderers (`src/map2d.js` pans to keep the point centered at the current zoom; `src/globe-renderer.js` calls `globe.pointOfView` preserving altitude) and wired it into the renderer's `self` handler, so the view recenters on your location on every successful check-in. `npm test` 32/32; smoke test + both renderers verified to expose `centerOn`.
+
+---
+
 ## 2026-08-02 — README: explicit per-OS install & run guide
 
 Rewrote the README install/run section into a clear, explicit step-by-step guide for **Windows (PowerShell), macOS, and Linux**: Node.js install per OS, Pear install, cloning/ZIP, `npm install`, `npm run dev`, plus OS-specific notes (Windows no-spaces path + firewall, macOS location permission, Linux WebGL/software-rendering fallback) and a two-machine pairing checklist. Also clarified the desktop-from-source model (no `.exe`/`.app` yet) and that both sides must add each other.

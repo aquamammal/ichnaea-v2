@@ -138,6 +138,7 @@ function handlePush (msg) {
     }
     case 'self': {
       state.globe.setSelf({ lat: msg.lat, lng: msg.lng })
+      state.globe.centerOn({ lat: msg.lat, lng: msg.lng })
       setGpsStatus(statusSuffix('checked in ' + humanize(msg.timestamp)))
       break
     }

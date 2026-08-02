@@ -137,6 +137,14 @@ export function createGlobeRenderer (container, { onPinClick } = {}) {
     return pins.has(contactId)
   }
 
+  // Center the globe on a lat/lng, preserving the current altitude.
+  function centerOn ({ lat, lng }) {
+    try {
+      const pov = globe.pointOfView()
+      globe.pointOfView({ lat, lng, altitude: pov ? pov.altitude : 2.5 })
+    } catch { /* ignore */ }
+  }
+
   function resize () {
     globe.width(container.clientWidth).height(container.clientHeight)
   }
@@ -144,5 +152,5 @@ export function createGlobeRenderer (container, { onPinClick } = {}) {
   resize()
   if (typeof window !== 'undefined') window.addEventListener('resize', resize)
 
-  return { setSelf, upsertContactPin, removeContactPin, hasPin, resize, globe, webgl: true }
+  return { setSelf, upsertContactPin, removeContactPin, hasPin, centerOn, resize, globe, webgl: true }
 }
