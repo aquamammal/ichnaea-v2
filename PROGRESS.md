@@ -4,6 +4,12 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-02 — README: explicit per-OS install & run guide
+
+Rewrote the README install/run section into a clear, explicit step-by-step guide for **Windows (PowerShell), macOS, and Linux**: Node.js install per OS, Pear install, cloning/ZIP, `npm install`, `npm run dev`, plus OS-specific notes (Windows no-spaces path + firewall, macOS location permission, Linux WebGL/software-rendering fallback) and a two-machine pairing checklist. Also clarified the desktop-from-source model (no `.exe`/`.app` yet) and that both sides must add each other.
+
+---
+
 ## 2026-08-02 — Fixed two-way live sync: protomux multiplexing + local-core serving
 
 **Status:** two-party replication now works end-to-end (verified live). This unblocks testing the app with another user.

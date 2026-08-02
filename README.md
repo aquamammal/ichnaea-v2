@@ -19,25 +19,137 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 
 ---
 
-## Requirements
+## Requirements (all operating systems)
 
-- [Node.js](https://nodejs.org) and npm
-- [Pear](https://pear.to) runtime (`npm i -g pear`)
+Ichnaea runs as a **desktop app from source** via the Pear runtime. There is no double-click `.exe`/`.app` installer yet — everyone needs these two things installed:
 
-## Install & run
+1. **Node.js LTS** (18 or newer), which includes `npm`
+2. The **Pear** runtime
+
+> **Important:** both you **and** the person you want to pair with must each install and run Ichnaea, then swap public keys (see [The "Add Contact" workflow](#the-add-contact-workflow)). Both sides must add each other.
+
+---
+
+## Install & run — step by step
+
+### Step 1: Install Node.js LTS
+
+**Windows (PowerShell):**
+1. Go to <https://nodejs.org> and download the **Windows Installer (.msi)** for the latest LTS.
+2. Run it. Accept the defaults (this installs `node` and `npm`).
+3. Open **PowerShell** (Start → type `powershell`) and verify:
+   ```powershell
+   node --version
+   npm --version
+   ```
+   Both should print a version number.
+
+**macOS:**
+1. Go to <https://nodejs.org> and download the **macOS Installer (.pkg)** for the latest LTS.
+2. Run it and follow the prompts.
+3. Open **Terminal** (Spotlight → `Terminal`) and verify:
+   ```bash
+   node --version
+   npm --version
+   ```
+
+**Linux (Ubuntu/Debian example):**
+1. Open a terminal and run:
+   ```bash
+   sudo apt update
+   curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
+   (Or install via [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) if you prefer.)
+2. Verify:
+   ```bash
+   node --version
+   npm --version
+   ```
+
+### Step 2: Install the Pear runtime
+
+Open a terminal (PowerShell on Windows, Terminal on macOS/Linux) and run:
+
+```bash
+npm install -g pear
+```
+
+Verify:
+
+```bash
+pear --help
+```
+
+### Step 3: Get the Ichnaea code
+
+**Option A — clone with git** (requires `git`):
+
+```bash
+git clone https://github.com/aquamammal/ichnaea-v2.git
+cd ichnaea-v2
+```
+
+**Option B — download a ZIP:**
+1. Go to <https://github.com/aquamammal/ichnaea-v2>
+2. Click **Code → Download ZIP**
+3. Unzip it and `cd` into the `ichnaea-v2` folder.
+
+> **⚠️ Windows — folder path must NOT contain spaces.** Pear fails with `ERR_INVALID_PROJECT_DIR` if the path has spaces. Put the folder somewhere like `C:\dev\ichnaea-v2` (no spaces in any parent folder either). On macOS/Linux any normal path is fine.
+
+### Step 4: Install dependencies
 
 ```bash
 npm install
-npm run dev        # = pear run -d .
 ```
 
-A Pear desktop window opens showing the globe and the control panels.
+### Step 5: Run Ichnaea
 
-Run the unit tests:
+```bash
+npm run dev
+```
+
+A Pear desktop window opens showing the world map and the control panels.
+
+### Step 6: Run the tests (optional)
 
 ```bash
 npm test
 ```
+
+---
+
+## Operating-system notes
+
+### Windows
+- **Installers:** use the `.msi` from nodejs.org. In PowerShell, `npm install -g pear` and `npm run dev` work as written above.
+- **No-spaces path:** critical — see Step 3.
+- **Globe:** WebGL usually works on Windows, so the **3D globe** renders. If it doesn't, the app automatically falls back to the 2D map.
+- **Firewall:** the first time you run it, Windows may ask to allow network access (needed for peer-to-peer connections). Allow it.
+
+### macOS
+- **Installers:** use the `.pkg` from nodejs.org.
+- **Globe:** WebGL works, so the **3D globe** renders.
+- **Privacy/Location:** macOS may prompt for location permission the first time GPS is used — allow it if you want real check-ins.
+
+### Linux
+- **Node:** use the NodeSource instructions above, or `nvm`.
+- **Globe:** some Linux GPU/driver combos block WebGL in the Pear window. If the 3D globe fails, the app automatically uses the **2D canvas map** (works everywhere, no WebGL needed).
+- **Software rendering (if the globe is blank):** run with software rendering:
+  ```bash
+  LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe npm run dev
+  ```
+- **Location:** `navigator.geolocation` may report unavailable on some desktop Linux setups; use **Settings → Manual location** to check in without GPS (see below).
+
+---
+
+## Pairing two machines (the actual "use it with a friend" step)
+
+1. Both of you run the app. Your **Base64 public key** is shown in the **top-left panel** (click it to copy).
+2. Swap keys through any channel you trust (Signal, email, in person).
+3. Each of you clicks **Add Contact**, pastes the *other's* key, and gives it a nickname.
+4. **Both sides must add each other** — the pair-wise topic needs both keys, so a one-sided add will not connect.
+5. Same LAN connects fast. Over the internet, Hyperswarm uses a DHT and may take **10–30 seconds** to find each other. When someone checks in, the pin appears on the other's map.
 
 ---
 
