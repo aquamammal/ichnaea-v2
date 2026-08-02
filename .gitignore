@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Runtime state (identity secret key, contacts, settings, Hypercore logs)
+data/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs
+npm-debug.log*
+*.log

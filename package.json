@@ -1,0 +1,44 @@
+{
+  "name": "ichnaea-v2",
+  "version": "0.1.0",
+  "description": "Periodic Check-In Beacon — P2P privacy-first location check-ins over Pear/Holepunch",
+  "main": "index.js",
+  "type": "module",
+  "pear": {
+    "pre": "pear-electron/pre",
+    "name": "ichnaea-v2",
+    "gui": {
+      "main": "src/index.html",
+      "width": 1100,
+      "height": 720,
+      "minWidth": 640
+    }
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "pear run -d .",
+    "dev:sw": "LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe pear run -d .",
+    "test": "brittle test/*.test.js"
+  },
+  "devDependencies": {
+    "brittle": "^3.0.0",
+    "fake-indexeddb": "^6.2.5",
+    "pear-interface": "^1.0.0"
+  },
+  "dependencies": {
+    "b4a": "^1.8.1",
+    "compact-encoding": "^3.3.0",
+    "corestore": "^7.12.0",
+    "globe.gl": "^2.46.1",
+    "hypercore": "^10.38.2",
+    "hypercore-crypto": "^3.7.0",
+    "hyperswarm": "^4.17.0",
+    "pear-bridge": "^1.2.0",
+    "pear-electron": "^1.9.0-rc.0",
+    "pear-pipe": "^1.0.6",
+    "random-access-memory": "^6.2.1",
+    "random-access-storage": "^3.0.2",
+    "random-access-web": "^2.0.3",
+    "sodium-universal": "^5.0.1"
+  }
+}
