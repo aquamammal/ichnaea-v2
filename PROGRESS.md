@@ -4,6 +4,12 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-02 — Removed auto-center/jump on check-in
+
+The earlier "auto-center the map/globe on your pin on check-in" behavior caused the map to jump/re-center. Axed it: removed the `centerOn` calls from the renderer's `self` handler and `onManualCheckin`, and deleted the now-unused `centerOn` method from both `src/map2d.js` and `src/globe-renderer.js` (keeping the two renderer interfaces in sync). The self pin still updates immediately on a manual check-in; the viewport no longer moves. `npm test` 32/32.
+
+---
+
 ## 2026-08-02 — Manual "Check in here" now moves the pin immediately
 
 Reported: entering lat/lng and pressing **Check in here** persisted the check-in (the pin appeared at the right place **after restart**, from the boot `selfLoc`), but did **not** move the pin right away. The immediate path relied on an unsolicited `self` push from the main process, which wasn't visibly landing. Fix (`src/main.js` `onManualCheckin`): the renderer now updates `setSelf` + `centerOn` **synchronously** from the typed coords the moment the button is pressed, before awaiting the round-trip — so the pin moves instantly. The main-process append/push still runs (persists + replicates). `npm test` 32/32.

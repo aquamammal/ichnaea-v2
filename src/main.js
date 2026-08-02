@@ -138,7 +138,6 @@ function handlePush (msg) {
     }
     case 'self': {
       state.globe.setSelf({ lat: msg.lat, lng: msg.lng })
-      state.globe.centerOn({ lat: msg.lat, lng: msg.lng })
       setGpsStatus(statusSuffix('checked in ' + humanize(msg.timestamp)))
       break
     }
@@ -373,7 +372,6 @@ async function onManualCheckin () {
     state.manual = { ...state.manual, lat, lng }
     if (state.globe && typeof state.globe.setSelf === 'function') {
       state.globe.setSelf({ lat, lng })
-      if (typeof state.globe.centerOn === 'function') state.globe.centerOn({ lat, lng })
     }
     await request('checkin:manual', { lat, lng })
     toast(`Checked in at ${round(lat)},${round(lng)}`)

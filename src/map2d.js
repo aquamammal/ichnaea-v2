@@ -222,15 +222,6 @@ export function create2DRenderer (container, { onPinClick } = {}) {
     return pins.has(contactId)
   }
 
-  // Center the viewport on a lat/lng, preserving the current zoom level.
-  function centerOn ({ lat, lng }) {
-    const { w, h } = dims()
-    ox = w / 2 - (lng + 180) * scale
-    oy = h / 2 - (90 - lat) * scale
-    userZoomed = true // don't let a later resize re-fit away from here
-    draw()
-  }
-
   function resize () {
     const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     // #globe is position:fixed;inset:0 (viewport-sized). Read the viewport
@@ -260,5 +251,5 @@ export function create2DRenderer (container, { onPinClick } = {}) {
     }
   }
 
-  return { setSelf, upsertContactPin, removeContactPin, hasPin, centerOn, resize, globe: null, webgl: false }
+  return { setSelf, upsertContactPin, removeContactPin, hasPin, resize, globe: null, webgl: false }
 }
