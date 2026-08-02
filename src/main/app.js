@@ -17,6 +17,14 @@ export async function createMainApp ({ pipe }) {
     try { pipe.write(JSON.stringify(obj)) } catch { /* pipe closing */ }
   }
 
+  // Contact records sent to the renderer are display data only. Keep the peer's
+  // key material (log key, core key) out of that process — it never needs them.
+  function toRendererContact (c) {
+    if (!c) return c
+    const { logKeyHex, coreKeyHex, ...rest } = c
+    return rest
+  }
+
   // --- state -----------------------------------------------------------------
   const state = {
     identity: null,
@@ -89,13 +97,13 @@ export async function createMainApp ({ pipe }) {
         if (meta.intervalMs) await contacts.setContactInterval(contactId, meta.intervalMs)
         if (meta.coreKey) await contacts.setContactCoreKey(contactId, meta.coreKey)
         const contact = await contacts.getContact(contactId)
-        if (contact) send({ type: 'contact:update', contact })
+        if (contact) send({ type: 'contact:update', contact: toRendererContact(contact) })
         startContactReplication(contactId, meta.coreKey, conn)
       },
       onLogKey: async (contactId, logKey) => {
         await contacts.setContactLogKey(contactId, b4a.toString(logKey, 'hex'))
         const contact = await contacts.getContact(contactId)
-        if (contact) send({ type: 'contact:update', contact })
+        if (contact) send({ type: 'contact:update', contact: toRendererContact(contact) })
       },
       onPeerLeft: (contactId) => {
         stopContactReplication(contactId)
@@ -153,7 +161,7 @@ export async function createMainApp ({ pipe }) {
 
   async function onContactCheckin (contactId, { lat, lng, timestamp }) {
     const contact = await contacts.updateLastSeen(contactId, timestamp)
-    if (contact) send({ type: 'contact:update', contact: { ...contact, lat, lng } })
+    if (contact) send({ type: 'contact:update', contact: { ...toRendererContact(contact), lat, lng } })
   }
 
   // --- scheduler ---------------------------------------------------------------
@@ -207,7 +215,7 @@ export async function createMainApp ({ pipe }) {
 
     try {
       if (msg.type === 'boot') {
-        const list = await contacts.listContacts()
+        const list = (await contacts.listContacts()).map(toRendererContact)
         const latest = await readLatest(state.localCore, state.identity.logKey)
         send({
           type: 'boot',
@@ -227,7 +235,7 @@ export async function createMainApp ({ pipe }) {
           { selfPublicKey: state.identity.publicKey }
         )
         await state.swarm.joinContact(contact)
-        send({ type: 'contact:added', id: msg.id, contact })
+        send({ type: 'contact:added', id: msg.id, contact: toRendererContact(contact) })
         return
       }
 

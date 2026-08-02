@@ -8,6 +8,8 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 **Status:** location payloads are now **end-to-end encrypted**. Also cleared a stale `pear run` instance that was holding the Hypercore lock and reset a leftover manual-GPS override.
 
+**Post-fix hardening:** contact records sent to the renderer are now sanitized — `src/main/app.js` adds `toRendererContact()` which strips `logKeyHex`/`coreKeyHex` (key material) from every renderer-bound record (`boot`, `contact:update`, `contact:added`). The renderer only needs display data; the peer's log key now exists solely in the main-process store. Verified: boot/contact records have no key fields while the store still holds the key. `npm test` 32/32.
+
 **Encryption design (see ARCHITECTURE.md / SECURITY.md):**
 - Each user persists a 32-byte symmetric **log key** + an X25519 **log-encryption keypair** in `identity.json` (backfilled on upgrade via `src/main/identity.js`).
 - Every block of the user's own core is encrypted with their log key (`sodium.crypto_secretbox`, nonce-prepended). `src/main/corelog.js` encrypts in `appendCheckin` and decrypts in `readLatest` (with a plaintext fallback for legacy blocks).
