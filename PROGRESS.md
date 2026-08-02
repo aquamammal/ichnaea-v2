@@ -4,6 +4,14 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-02 — Manual "Check in here" now moves the pin immediately
+
+Reported: entering lat/lng and pressing **Check in here** persisted the check-in (the pin appeared at the right place **after restart**, from the boot `selfLoc`), but did **not** move the pin right away. The immediate path relied on an unsolicited `self` push from the main process, which wasn't visibly landing. Fix (`src/main.js` `onManualCheckin`): the renderer now updates `setSelf` + `centerOn` **synchronously** from the typed coords the moment the button is pressed, before awaiting the round-trip — so the pin moves instantly. The main-process append/push still runs (persists + replicates). `npm test` 32/32.
+
+Note: if **Check in now** (GPS) also fails to move the pin on a current build, that points to unsolicited main→renderer push delivery (affects `status`/`peers`/`gps:request`) and needs a Pear-pipe look — but the manual path is now independent of it.
+
+---
+
 ## 2026-08-02 — Auto-center the map/globe on your own pin on every check-in
 
 A "check in here" (manual lat/lng) already sent the `self` push and moved the self pin, but the map didn't re-center, so the pin could be off-screen and the update looked like a no-op. Added a `centerOn({lat,lng})` method to both renderers (`src/map2d.js` pans to keep the point centered at the current zoom; `src/globe-renderer.js` calls `globe.pointOfView` preserving altitude) and wired it into the renderer's `self` handler, so the view recenters on your location on every successful check-in. `npm test` 32/32; smoke test + both renderers verified to expose `centerOn`.

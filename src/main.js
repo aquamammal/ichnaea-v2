@@ -363,12 +363,18 @@ async function onCheckinNow () {
   }
 }
 
-// One-off manual check-in: append these coords directly (skips GPS).
+// One-off manual check-in: append these coords directly (skips GPS). Update the
+// pin immediately and synchronously from the typed coords, so it visibly moves
+// right away without waiting on the main-process 'self' round-trip.
 async function onManualCheckin () {
   els.setErr.textContent = ''
   try {
     const { lat, lng } = readManualInputs()
     state.manual = { ...state.manual, lat, lng }
+    if (state.globe && typeof state.globe.setSelf === 'function') {
+      state.globe.setSelf({ lat, lng })
+      if (typeof state.globe.centerOn === 'function') state.globe.centerOn({ lat, lng })
+    }
     await request('checkin:manual', { lat, lng })
     toast(`Checked in at ${round(lat)},${round(lng)}`)
   } catch (err) {
