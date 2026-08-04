@@ -59,7 +59,7 @@ export function createGlobeRenderer (container, { onPinClick } = {}) {
       .backgroundColor('rgba(0,0,0,0)')
       .showAtmosphere(true)
       .atmosphereColor('#4a90d9')
-      .atmosphereDaylightAlpha(0.25)
+      .atmosphereAltitude(0.25)
       .pointAltitude('alt')
       .pointColor('color')
       .pointRadius('size')
