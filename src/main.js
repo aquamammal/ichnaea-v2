@@ -17,7 +17,7 @@ const els = {
   modalAdd: $('modal-add'), addNick: $('add-nickname'), addPub: $('add-pubkey'), addErr: $('add-error'),
   modalSet: $('modal-settings'), setInterval: $('set-interval'), setErr: $('set-error'),
   manualLat: $('manual-lat'), manualLng: $('manual-lng'), manualEnabled: $('manual-enabled'),
-  pinOverlay: $('pin-overlay'), pinName: $('pin-name'), pinTime: $('pin-time'), pinAgo: $('pin-ago'), pinStatus: $('pin-status'),
+  pinOverlay: $('pin-overlay'), pinName: $('pin-name'), pinTime: $('pin-time'), pinAgo: $('pin-ago'), pinStatus: $('pin-status'), pinCoords: $('pin-coords'),
   toast: $('toast'), devPanel: $('dev-panel'), devStatus: $('dev-status'), versionTag: $('version-tag')
 }
 
@@ -60,12 +60,18 @@ function showPinOverlay (data) {
     els.pinTime.textContent = '—'
     els.pinAgo.textContent = '—'
     els.pinStatus.textContent = 'self'
+    els.pinCoords.textContent = (typeof data.lat === 'number' && typeof data.lng === 'number')
+      ? round(data.lat) + ', ' + round(data.lng)
+      : '\u2014'
   } else {
     const c = data.contact
     els.pinName.textContent = c.nickname || 'Contact'
     els.pinTime.textContent = formatLocal(c.lastSeenTs)
     els.pinAgo.textContent = humanize(c.lastSeenTs)
     els.pinStatus.textContent = data.status
+    els.pinCoords.textContent = (typeof data.lat === 'number' && typeof data.lng === 'number')
+      ? round(data.lat) + ', ' + round(data.lng)
+      : '\u2014'
   }
   els.pinOverlay.style.display = 'block'
   els.pinOverlay.style.left = '50%'
@@ -226,7 +232,16 @@ function renderContactsList () {
     rm.textContent = '×'
     rm.title = 'Remove contact'
     rm.addEventListener('click', () => onRemoveContact(c))
-    item.append(dot, name, ago, rm)
+    const top = document.createElement('div')
+    top.className = 'contact-top'
+    top.append(dot, name, ago, rm)
+    item.appendChild(top)
+    if (typeof c.lat === 'number' && typeof c.lng === 'number') {
+      const coords = document.createElement('div')
+      coords.className = 'contact-coords'
+      coords.textContent = round(c.lat) + ', ' + round(c.lng)
+      item.appendChild(coords)
+    }
     list.appendChild(item)
   }
 }
