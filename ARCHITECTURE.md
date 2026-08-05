@@ -120,6 +120,14 @@ Opt-in protection for the JSON stores `identity.json` / `contacts.json` / `setti
 
 ---
 
+## Check-in history & NEW badges
+
+- **History (#8):** `corelog.readHistory(core, logKey, n)` pages the last `n` decrypted entries (oldest→newest, same key-fallback as `readLatest`). A `contact:history` pipe message returns them from the contact's replicated core (`state.contactCores`). Tapping a contact row opens a history panel in the renderer.
+- **NEW badges (#8):** the renderer keeps an unread set (`unreadIds`) persisted in `localStorage` (`ichnaea-seen`) alongside a `lastOpenTs`. At boot, contacts whose `lastSeenTs > lastOpen` are badged (they checked in while the app was closed); a live `contact:update` with `lastSeenTs > bootTs` badges too. Viewing a contact's history clears the badge. Contacts are matched by `id` (their public-key hex).
+- **Self-name at pin (#11):** `showPinOverlay` renders `state.selfName || 'You'` for the user's own pin.
+
+---
+
 ## Why pair-wise swarm topics (not group secrets)
 
 The naive design is a single "group secret" topic that all your contacts join. We rejected it:

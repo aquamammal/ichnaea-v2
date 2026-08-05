@@ -132,6 +132,13 @@
 - [ ] **Desktop reconnect (pending working desktop runtime):** kill the main process → renderer shows "Reconnecting…" and re-boots when the main returns; closing the app still quits it.
 - [ ] **Bootstrap override:** with `ICHNAEA_BOOTSTRAP` set to known nodes, discovery still connects (and uses the given nodes).
 
+## 5j. History timeline + NEW badges + self-name
+
+- [ ] **History panel:** tap a contact row → a panel lists their recent check-ins (time + coords). With no history, it shows "No check-in history yet."
+- [ ] **NEW badge:** a contact who checked in since the app was last opened shows a **NEW** badge in the list. Viewing their history clears it.
+- [ ] **Live NEW:** while the app is open, a contact's live check-in marks them NEW.
+- [ ] **Self-name at pin:** set **Settings → Your name**, check in, tap your own pin → the overlay shows your name (not just "You").
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.

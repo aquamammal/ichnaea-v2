@@ -4,6 +4,31 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.5 release (history + NEW badges + self-name)
+
+**Status:** bumped both repos to **0.2.5** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 7`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.5-debug.apk` (SHA `24d59f9a…2930`) and a GitHub Release `v0.2.5` published, so the in-app updater can update the phone 0.2.4 → 0.2.5. Contents: check-in history timeline + NEW badges (#8) and self-name at your own pin (#11).
+
+**Known limits / next steps**
+- Remaining roadmap: #9 (stale notifications), #10 (desktop globe), #12 (offline queue), #13-#15 (process/polish).
+
+---
+
+## 2026-08-05 — UX: check-in history + NEW badges (#8) + self-name at pin (#11)
+
+**Status:** shipped on both platforms.
+
+**What changed**
+- **#8 History timeline + new-contact indicators:** `corelog.readHistory` pages the last N decrypted entries; a new `contact:history` pipe message returns them from a contact's replicated core. Tapping a contact row opens a **history panel** (times + coords). A persisted unread set (`localStorage` `ichnaea-seen`) badges contacts who checked in since the app was last open (or live this session) with **NEW**, cleared on viewing.
+- **#11 Self-name at pin:** `showPinOverlay` shows `state.selfName || 'You'` for your own pin.
+
+**Verification**
+- `npm test` — **60/60 pass (403 asserts)** desktop (incl. new `test/history.test.js`); Android suite green (375 asserts). Both renderers bundle.
+
+**Known limits / next steps**
+- Remaining roadmap: #9 (stale notifications, native), #10 (desktop globe), #12 (offline queue), #13-#15 (process/polish).
+
+---
+
 ## 2026-08-05 — v0.2.4 release (reliability)
 
 **Status:** bumped both repos to **0.2.4** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 6`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.4-debug.apk` (SHA `80cd1baa…3a45`) and a GitHub Release `v0.2.4` published, so the in-app updater can update the phone 0.2.3 → 0.2.4. Contents: parallel DHT discovery + connecting-state (#5) and exponential-backoff auto-reconnect (#6).
