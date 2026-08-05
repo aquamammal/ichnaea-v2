@@ -4,6 +4,15 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.2 release (autoupdate test)
+
+**Status:** bumped both repos to **0.2.2** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android also `versionCode 4`). Android APK rebuilt and shipped to `dist/ichnaea-android-v0.2.2-debug.apk` (SHA `0583a28b…4eee3`), with a GitHub Release `v0.2.2` published so the in-app **Check for updates** can be tested from the v0.2.1 build already on the phone. Two-phone-over-different-networks E2E sync verified by the user.
+
+**Known limits / next steps**
+- Remaining roadmap: security pair (#2 log-key rotation, #4 encrypted at-rest), reliability (#5-#7), UX (#8-#12), desktop release flow (#13) + `pear run` fix (#14) + version auto-sync test (#15).
+
+---
+
 ## 2026-08-05 — Fingerprint verification (#1) + precision dial (#3)
 
 **Status:** shipped Pair 1 of the roadmap on both platforms: a safety-number/key fingerprint for contacts and an optional coarse-location ("snap to grid") setting. No main-process change was needed for the fingerprint (the contact's `publicKeyB64` already reaches the renderer).
