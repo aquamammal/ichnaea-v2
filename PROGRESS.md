@@ -6,7 +6,7 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ## 2026-08-05 — v0.2.2 release (autoupdate test)
 
-**Status:** bumped both repos to **0.2.2** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android also `versionCode 4`). Android APK rebuilt and shipped to `dist/ichnaea-android-v0.2.2-debug.apk` (SHA `0583a28b…4eee3`), with a GitHub Release `v0.2.2` published so the in-app **Check for updates** can be tested from the v0.2.1 build already on the phone. Two-phone-over-different-networks E2E sync verified by the user.
+**Status:** bumped both repos to **0.2.2** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android also `versionCode 4`). Android APK rebuilt and shipped to `dist/ichnaea-android-v0.2.2-debug.apk` (SHA `81a36f91…059ff`), with a GitHub Release `v0.2.2` published so the in-app **Check for updates** can be tested from the v0.2.1 build already on the phone. Added **in-app updating** on Android: when a newer release is found, an **Update now** button downloads the APK and hands it to the Android package installer via a native `IchnaeaUpdaterPlugin` (FileProvider content URI; requests "Install unknown apps" on Android 8+). Two-phone-over-different-networks E2E sync verified by the user.
 
 **Known limits / next steps**
 - Remaining roadmap: security pair (#2 log-key rotation, #4 encrypted at-rest), reliability (#5-#7), UX (#8-#12), desktop release flow (#13) + `pear run` fix (#14) + version auto-sync test (#15).
