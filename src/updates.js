@@ -9,7 +9,7 @@
 // and reports whether a newer build exists, linking to the release page.
 
 // Change when bumping the app version (mirrors package.json).
-const APP_VERSION = '0.2.5'
+const APP_VERSION = '0.2.6'
 const REPO = 'aquamammal/ichnaea-v2'
 
 const GITHUB_API = `https://api.github.com/repos/${REPO}/releases/latest`

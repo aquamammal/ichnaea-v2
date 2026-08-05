@@ -26,6 +26,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Reliability:** contact discovery runs in parallel at startup; the peer-status line shows **Connecting to contacts…** while discovery is in progress; and both platforms auto-reconnect with exponential backoff (capped at 30s) if the connection drops. Optionally point the DHT at known bootstrap nodes via the `ICHNAEA_BOOTSTRAP` env var.
 - **Check-in history & NEW badges:** tap a contact in the list to open their **recent check-in history** (times + coordinates). Contacts that checked in since you last opened the app get a **NEW** badge, cleared when you view their history.
 - **Your name at your pin:** tapping your own pin shows your self-chosen name (Settings → Your name) instead of just "You".
+- **Offline check-in queue:** if a check-in fires while no contact is connected, a status line shows **"N check-ins queued (offline)"**; once a contact connects, the check-ins sync via replication and the line briefly shows **"Synced N offline check-ins"**.
 - **Rename contacts:** long-press a contact (or right-click on desktop) to rename them — local-only, never sent to the peer.
 - **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
 - **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.
@@ -130,9 +131,25 @@ A Pear desktop window opens showing the world map and the control panels.
 
 ### Step 6: Run the tests (optional)
 
+
 ```bash
 npm test
 ```
+
+---
+
+## Releasing (desktop)
+
+The desktop update checker (`src/updates.js`, `REPO = aquamammal/ichnaea-v2`) reads the latest **GitHub Release tag** of this repo, so a release must exist for **Settings → Check for updates** to report "up to date". There is no single desktop artifact — the checker only needs the tag.
+
+1. Bump `version` in `package.json` and `APP_VERSION` in `src/updates.js` to match.
+2. Commit + push to `main`.
+3. Publish a release tag (the token in `~/.git-credentials` authorizes as `aquamammal`):
+   ```
+   POST https://api.github.com/repos/aquamammal/ichnaea-v2/releases
+   { "tag_name": "v0.2.6", "target_commitish": "main", "name": "...", "body": "..." }
+   ```
+   (or `gh release create v0.2.6 --title "..."`). Attach any distributable if desired; the tag alone satisfies the checker.
 
 ---
 

@@ -4,6 +4,31 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.6 release (offline queue + desktop release)
+
+**Status:** bumped both repos to **0.2.6** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 8`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.6-debug.apk` (SHA `77b26c92…3882`) and a GitHub Release `v0.2.6` published, so the in-app updater can update the phone 0.2.5 → 0.2.6. Contents: offline check-in queue (#12). Also published a GitHub Release for `ichnaea-v2` so the desktop checker reports correctly (#13).
+
+**Known limits / next steps**
+- Remaining roadmap: #9 (stale notifications), #10 (desktop globe), #14 (`pear run` fix), #15 (version auto-sync test).
+
+---
+
+## 2026-08-05 — Offline check-in queue (#12) + desktop release flow (#13)
+
+**Status:** shipped on both platforms + published the desktop release.
+
+**What changed**
+- **#12 Offline check-in queue:** `src/main/pending.js` persists `data/pending.json` (cap 100, dedupe by timestamp). `doCheckin` enqueues when no contact is connected; the entry is also in the local core so it syncs via replication. `onPeerVerified` flushes the queue; the boot response carries `pendingCount` and a `pending` push drives a renderer status line ("N queued (offline)" / transient "Synced N").
+- **#13 Desktop release flow:** published a GitHub Release for `ichnaea-v2` (the update checker previously said "No releases"), documented the release steps in the desktop README.
+
+**Verification**
+- `npm test` — **61/61 pass (418 asserts)** desktop (incl. new `test/pending.test.js`); Android suite green (390 asserts). Both renderers bundle.
+
+**Known limits / next steps**
+- Remaining roadmap: #9 (stale notifications, native), #10 (desktop globe), #14 (`pear run` fix), #15 (version auto-sync test).
+
+---
+
 ## 2026-08-05 — v0.2.5 release (history + NEW badges + self-name)
 
 **Status:** bumped both repos to **0.2.5** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 7`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.5-debug.apk` (SHA `24d59f9a…2930`) and a GitHub Release `v0.2.5` published, so the in-app updater can update the phone 0.2.4 → 0.2.5. Contents: check-in history timeline + NEW badges (#8) and self-name at your own pin (#11).

@@ -128,6 +128,12 @@ Opt-in protection for the JSON stores `identity.json` / `contacts.json` / `setti
 
 ---
 
+## Offline check-in queue (#12)
+
+When a check-in fires (`doCheckin`) while no contact is connected (`swarm.state().verified === 0`), the entry is recorded in `data/pending.json` (`src/main/pending.js`, capped at 100, deduped by timestamp). The entry is **also** appended to the local core at check-in time, so nothing is lost locally and replication delivers it once a peer connects — the queue is the visibility + sync signal, not the source of truth. The boot response carries `pendingCount`; a `pending` push updates the renderer's status line ("N check-ins queued (offline)", or a transient "Synced N offline check-ins" when `onPeerVerified` clears the queue).
+
+---
+
 ## Why pair-wise swarm topics (not group secrets)
 
 The naive design is a single "group secret" topic that all your contacts join. We rejected it:

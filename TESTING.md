@@ -139,6 +139,13 @@
 - [ ] **Live NEW:** while the app is open, a contact's live check-in marks them NEW.
 - [ ] **Self-name at pin:** set **Settings → Your name**, check in, tap your own pin → the overlay shows your name (not just "You").
 
+## 5k. Offline check-in queue
+
+- [ ] **Queued status:** check in while no contact is connected (or disconnect peers) → the status line shows "N check-ins queued (offline)".
+- [ ] **Sync on reconnect:** reconnect a contact → the queue line briefly shows "Synced N offline check-ins" and clears.
+- [ ] **No data loss:** while offline, check-ins are still stored locally; after reconnect the contact sees them via replication.
+- [ ] **Restart:** queue count persists across a restart (pending.json) and clears once a peer connects.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.
