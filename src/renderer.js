@@ -5,7 +5,7 @@
 // The renderer exposes the same public interface as the 3D renderer does on
 // Android:
 //   { setSelf, upsertContactPin, removeContactPin, hasPin, setPinScale,
-//     setGrayscale, setColored, centerOn, resize, globe, webgl }
+//     setGrayscale, setColored, setArcs, centerOn, resize, globe, webgl }
 // so callers (src/main.js) never need to know which one they got.
 //
 // Zero telemetry: every style derives its surface from the bundled Natural

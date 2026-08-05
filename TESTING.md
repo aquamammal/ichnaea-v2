@@ -95,6 +95,14 @@
 - [ ] With no newer release (or none published), tapping shows **You're up to date** (or "No releases published yet").
 - [ ] Works identically on Android and desktop.
 
+## 5f. Broadcast UX (header, frequency, connecting lines)
+
+- [ ] Beacon tile header reads **Ichnaea Ver. X.Y.Z** (matches the app version).
+- [ ] The button reads **Broadcast coordinates** (not "Check in now") and triggers an immediate broadcast.
+- [ ] **Connecting lines** toggle on the tile: On → dotted lines from your pin to each contact; Off → lines hidden; persists across reload.
+- [ ] **Frequency:** Settings shows **Every [number] [unit]** dropdowns (minutes/hours/days). Save → tile shows "Broadcast: every <choice>" and it persists across reload.
+- [ ] The tile's minimize button still works after the pin loads and after a reconnect.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.

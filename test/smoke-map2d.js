@@ -83,6 +83,10 @@ for (const styleId of ['map', 'map-center', 'map-dymaxion']) {
   r.setColored(true)
   r.setColored(false)
   r.setColored(true)
+  // Connecting-lines (arcs) toggle.
+  assert(typeof r.setArcs === 'function', styleId + ' exposes setArcs')
+  r.setArcs(false)
+  r.setArcs(true)
   // Center-on-contact (clicking a pin centers the map on them).
   assert(typeof r.centerOn === 'function', styleId + ' exposes centerOn')
   r.centerOn(25.03, 121.56)

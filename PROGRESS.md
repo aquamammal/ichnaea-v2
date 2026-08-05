@@ -4,6 +4,28 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — Tile-freeze fix + broadcast UX (v0.2.1.x)
+
+**Status:** fixed the collapsed-tile freeze (Android) and shipped four broadcast/UX changes on both platforms.
+
+**What changed**
+- **Bug: tiles freeze right after the pin loads** (Android). Root cause: `ws.onclose → setTimeout(connect, 2000)` re-ran `connect()`, which re-ran `initGlobe()` + `initUI()` — a second globe stacked on the first, dropdown options duplicated (12 instead of 6), and the second init's listeners raced the first pass so the panel minimize handlers ended up missing. Fix: `connect()` is now idempotent — only the first boot initializes renderer + UI; reconnects just open a fresh WebSocket. Verified on-device: options stay at 6, one globe, minimize toggles reliably.
+- **"Check in now" → "Broadcast coordinates"** (beacon tile button).
+- **Connecting-lines toggle** — a "Connecting lines" On/Off button on the beacon tile shows/hides the dotted arcs from your pin to each contact. New `setArcs(on)` on both renderers (globe: gates `syncArcs`; 2D: gates the dotted-line pass), persisted under `showArcs`.
+- **Beacon tile header** now reads **"Ichnaea Ver. X.Y.Z"** (replaces "Check-In Beacon").
+- **Broadcast frequency** is now user-defined as **number + unit** (minutes/hours/days dropdowns) instead of a fixed list, saved via the existing `interval:set`, and the current frequency is shown on the beacon tile ("Broadcast: every 6 hours").
+
+**Verification**
+- `npm test` — **36/36 pass (74 asserts)** desktop; **23/23** Android.
+- `node test/smoke-map2d.js` — green; now also exercises `setArcs` on all three styles.
+- On-device (Android): header/button/freq-display render; arcs toggle persists (`showArcs=0`); frequency set to 6 hours persists across reload; minimize works after the pin loads.
+- freqSplit unit-tested in Node (ms → value+unit for minutes/hours/days).
+
+**Known limits / next steps**
+- `pear run` GUI still broken on this Linux box (environmental) — desktop UI changes verified in code + smoke, not a live window.
+
+---
+
 ## 2026-08-05 — Manual "Check for updates" (GitHub Release tag)
 
 **Status:** added a manual, opt-in update check to both apps. Preserves zero-telemetry: no network request happens on boot or in the background — only when the user taps **Settings → Check for updates**.

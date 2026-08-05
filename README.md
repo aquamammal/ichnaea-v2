@@ -23,6 +23,9 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
 - **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.
 - **Update check:** **Settings → Check for updates** fetches the latest **GitHub Release** for this repo and reports if a newer build exists. Manual and opt-in — no network on boot or in the background (preserves zero-telemetry).
+- **Connecting-lines toggle:** a "Connecting lines" On/Off button on the Check-In Beacon tile shows/hides the dotted arcs from your pin to each contact.
+- **Your broadcast frequency on the tile:** the beacon header reads **Ichnaea Ver. X.Y.Z**, and the tile shows your current frequency ("Broadcast: every 6 hours"). **Settings → Broadcast frequency** is a free choice of **minutes / hours / days**, not a fixed list.
+- **"Broadcast coordinates"** button replaces the old "Check in now" label.
 
 ---
 
