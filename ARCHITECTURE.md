@@ -15,9 +15,9 @@ Each user keeps an **append-only Hypercore log** of their own GPS check-ins; for
 | Piece | Role | Where |
 |---|---|---|
 | **Identity** | An Ed25519 keypair generated on first launch. The public key *is* your address. | `src/main/identity.js`, persisted on the **filesystem** (`data/identity.json`) |
-| **Contacts** | The list of people you share with: their public key + a local nickname + their interval. | `src/main/contacts.js` (JSON file `data/contacts.json`) |
+| **Contacts** | The list of people you share with: their public key + a local nickname + their interval + the peer's self-chosen name (`lastName`, from their latest check-in). | `src/main/contacts.js` (JSON file `data/contacts.json`) |
 | **Pair-wise swarm** | One Hyperswarm; joins a unique topic per contact. Carries the handshake and replication streams. | `src/swarm.js` (main process) |
-| **Local log** | Your own Hypercore. Each check-in appends `{lat,lng,timestamp}`. | `src/main/corelog.js` (filesystem storage under `data/cores/`) |
+| **Local log** | Your own Hypercore. Each check-in appends `{lat,lng,timestamp,name}` — `name` is your self-chosen display name (Settings → Your name). | `src/main/corelog.js` (filesystem storage under `data/cores/`) |
 | **Scheduler** | Fires at your chosen interval, gets a fix, appends to your log. | `src/main/scheduler.js` (main process; GPS crosses the pipe) |
 | **Settings** | Broadcast interval, core-rotation generation, manual-GPS override. | `src/main/settings.js` (JSON file `data/settings.json`) |
 | **Main orchestrator** | Boots the P2P stack and routes pipe messages. | `src/main/app.js`, wired by `index.js` |
@@ -62,7 +62,7 @@ The app is split across the two Pear processes, bridged by the **Pear pipe** (ne
 
 ## Rendering: user-selectable 2D maps
 
-The desktop build ships **2D canvas maps only** (no 3D WebGL globe). `src/renderer.js` reads the user's chosen style from `src/map-styles.js` and builds the matching renderer from `src/map2d.js`. The renderer exposes a fixed interface (`setSelf`, `upsertContactPin`, `removeContactPin`, `hasPin`, `setPinScale`, `setGrayscale`, `setColored`, `resize`, `globe`, `webgl`), so `src/main.js` needs no changes and the rest of the app (contacts, settings, P2P) works regardless of style.
+The desktop build ships **2D canvas maps only** (no 3D WebGL globe). `src/renderer.js` reads the user's chosen style from `src/map-styles.js` and builds the matching renderer from `src/map2d.js`. The renderer exposes a fixed interface (`setSelf`, `upsertContactPin`, `removeContactPin`, `hasPin`, `setPinScale`, `setGrayscale`, `setColored`, `centerOn`, `resize`, `globe`, `webgl`), so `src/main.js` needs no changes and the rest of the app (contacts, settings, P2P) works regardless of style. `centerOn(lat,lng)` pans the map so a clicked contact is centered.
 
 Three styles are available (picked in **Settings → Map style**; persisted in localStorage, applied on reload):
 
@@ -155,3 +155,12 @@ The scheduler lives in the main process (`src/main/scheduler.js`) and fires on a
 ## Manual GPS override
 
 The user can enter coordinates by hand (Settings → Manual location) to override GPS or to check in where there is no GPS. A one-off **"Check in here"** sends `checkin:manual` and appends directly (no GPS request). The **"Use manual location for scheduled check-ins"** toggle sends `manual:set`; the main process persists `{enabled, lat, lng}` in `data/settings.json` and its scheduler then short-circuits the `gps:request`, using the stored coords for every scheduled fire until the toggle is turned off. When the override is on, the renderer tags the GPS status line (e.g. `manual: 51.5,-0.12`).
+
+## Contact naming (local nickname vs self-name)
+
+Two separate names exist per contact, on purpose:
+
+- **Local nickname** (`nickname`) — chosen by *you* when adding the contact or renaming them (long-press / right-click → `contact:rename`). It is **never sent to the peer** and the peer's check-ins never overwrite it. This is the "renaming" feature.
+- **Self-name** (`lastName`) — the name *they* chose in **Settings → Your name**, carried inside each encrypted check-in entry (`corelog.appendCheckin` writes `{lat,lng,timestamp,name}`). On receive, the main process stores it via `contacts.setContactLastName` and the UI shows it as a hint when it differs from your local nickname. It's plaintext inside the already-encrypted log entry, so it travels only between the two paired peers.
+
+The renderer always displays the local nickname first, with the peer's self-name as a tooltip/hint when they differ.

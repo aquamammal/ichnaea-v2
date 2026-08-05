@@ -4,6 +4,29 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.1: rename contacts, self-name, click-to-center + str.trim fix
+
+**Status:** three UX features + a renderer crash fix, shipped identically on Android and desktop.
+
+**What changed**
+- **Boot/render fix** — three-globe threw `Uncaught TypeError: str.trim is not a function` (bundle line ~121236) at check-in/staleness redraws when a pin or arc got an undefined color or coordinate. Hardened `globe-renderer.js` `syncArcs()` and `upsertContactPin()` to skip contacts without coords and string-coerce colors; hardened `map2d.js` identically; the staleness sweep now only re-renders stale pins that actually have coords.
+- **Rename contacts** — long-press a contact (Android) or right-click (desktop) to rename; local-only (`contact:rename` → `contacts.renameContact`), never sent to the peer.
+- **Name yourself** — new **Settings → Your name** (`selfname:set` → `settings.selfName`); the name is appended to every check-in entry (`corelog.appendCheckin` `name` field), replicated with the log, and stored per-contact as `lastName` on receive. The UI shows the local nickname with the peer's self-name as a hint.
+- **Click to center** — tapping a contact row or a map pin centers the map/globe on them via a new `centerOn(lat,lng)` method on both renderers (globe: camera `pointOfView`; 2D: pan).
+- **Version** — bumped to **0.2.1** (Android `versionCode 3` / `versionName 0.2.1`; on-screen tags updated; dist APK refreshed + SHA in README).
+
+**Verification**
+- `npm test` — **32/32 pass (61 asserts)** desktop; **23/23** Android.
+- `node test/smoke-map2d.js` — green; now asserts `centerOn` on all three styles.
+- Main-process unit checks (temp-dir): `renameContact`/`setContactLastName` persist + reject blank; `appendCheckin` writes the `name` field and omits it when unset — all pass.
+- `node --check` on every changed file in both repos — OK.
+
+**Known limits / next steps**
+- `pear run` GUI still broken on this Linux box (environmental) — UI interactions (long-press rename, click-to-center) verified in code + smoke, not on a live window.
+- `lastName` shows from the peer's *latest* check-in; the peer's name is only visible after their first check-in with a name set.
+
+---
+
 ## 2026-08-05 — QR code scanning (camera) in Add Contact
 
 **Status:** the apps can now scan a friend's QR code with the camera, not just display their own. Implemented identically on Android and desktop.

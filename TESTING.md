@@ -80,6 +80,14 @@
 - [ ] Tapping the key text in the QR modal copies it.
 - [ ] QR share + scan are generated locally (work offline; no network involved).
 
+## 5d. Rename, your name, click-to-center
+
+- [ ] **Rename a contact:** long-press a contact (or right-click on desktop) → prompt appears → enter a new nickname → the list updates and the new name sticks after reload.
+- [ ] **Your name:** set **Settings → Your name** → the peer's app shows that name (as a hint under whatever nickname *they* gave you) after your next check-in.
+- [ ] **Local override:** renaming a contact locally does **not** change what you send them, and their check-ins don't overwrite your local nickname.
+- [ ] **Click to center:** click a contact row (or a pin) → the map pans so they're centered; the pin overlay opens.
+- [ ] All of the above work in every map style and in the Dymaxion projection.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.

@@ -19,6 +19,9 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Colored countries toggle:** a live button on the Check-In Beacon tile (`Colored countries` On/Off) fills each country with its own hue in every map projection. Persisted, applied at boot, toggles in place — no reload needed.
 - **QR code sharing:** the `QR` button next to your public key renders it as a scannable QR code (local `qrcode` lib — no network), plus the key text for manual copy.
 - **QR code scanning:** **Add Contact** has a **Scan QR code** button that opens the camera and decodes a friend's on-screen QR on-device (local `jsqr` lib — zero telemetry), filling the public-key field automatically. Requires **camera permission** (your OS prompts on first use).
+- **Rename contacts:** long-press a contact (or right-click on desktop) to rename them — local-only, never sent to the peer.
+- **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
+- **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.
 
 ---
 

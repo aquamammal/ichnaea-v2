@@ -83,10 +83,13 @@ for (const styleId of ['map', 'map-center', 'map-dymaxion']) {
   r.setColored(true)
   r.setColored(false)
   r.setColored(true)
+  // Center-on-contact (clicking a pin centers the map on them).
+  assert(typeof r.centerOn === 'function', styleId + ' exposes centerOn')
+  r.centerOn(25.03, 121.56)
   r.removeContactPin('c1')
   assert(!r.hasPin('c1'), styleId + ' contact pin removed')
   r.resize()
-  console.log(styleId + ': ok (colored mode toggled)')
+  console.log(styleId + ': ok (colored mode toggled, centerOn called)')
 }
 
 // --- shared country palette ------------------------------------------------------
