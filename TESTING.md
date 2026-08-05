@@ -103,6 +103,17 @@
 - [ ] **Frequency:** Settings shows **Every [number] [unit]** dropdowns (minutes/hours/days). Save → tile shows "Broadcast: every <choice>" and it persists across reload.
 - [ ] The tile's minimize button still works after the pin loads and after a reconnect.
 
+## 5g. Fingerprint verification + precision dial
+
+- [ ] **Contacts list:** each contact shows a small gray 4-word fingerprint under their name (e.g. `falcon-fern-ember-dune`).
+- [ ] **Pin overlay:** clicking a contact's pin shows a **Fingerprint:** row with the same 4-word pair.
+- [ ] **Add Contact live preview:** open **Add Contact** and start typing a key → a fingerprint appears live under the key field. A different key shows a different fingerprint; empty/garbage shows "Paste or scan a key to see its fingerprint." and never shows a valid-looking pair.
+- [ ] **Stability:** the fingerprint for a given pasted key is identical across restarts and across the two app instances.
+- [ ] **Precision dropdown:** **Settings → Location precision** lists Off / ~5 / ~10 / ~25 / ~50 km, reflecting the saved value on open and after reload.
+- [ ] **Snap effect:** set **~50 km**, save, then **Broadcast coordinates** (or check in manually) → your self pin lands on a ~50 km grid point; contacts' pins (from their replicated check-in) are likewise coarsened. Setting **Off** restores your exact position.
+- [ ] **Covers manual check-ins:** with precision set, a manual "Check in here" is also snapped to the grid.
+- [ ] **No side effects:** fingerprint + precision do not affect P2P connectivity, other settings, or any map style.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.
@@ -124,7 +135,7 @@
 
 ## Automated
 
-`npm test` (using `brittle`) covers the pure logic: crypto/topic derivation, base64 validation, staleness classification, contact CRUD rules, and the X25519/secretbox encryption primitives (AEAD round-trip, wrong-key rejection, sealed-box log-key exchange). The items above are the manual end-to-end complement.
+`npm test` (using `brittle`) covers the pure logic: crypto/topic derivation, base64 validation, staleness classification, contact CRUD rules, the X25519/secretbox encryption primitives (AEAD round-trip, wrong-key rejection, sealed-box log-key exchange), the key-fingerprint derivation (`test/fingerprint.test.js`), and the coordinate grid-snap (`test/precision.test.js`). The items above are the manual end-to-end complement.
 
 ### Two-instance E2E (live sync)
 

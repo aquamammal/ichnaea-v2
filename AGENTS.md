@@ -27,6 +27,7 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 │  ├─ country-colors.js  # shared per-country color palette (colored-countries mode)
 │  ├─ scanner.js         # camera QR scanner (getUserMedia + jsqr, on-device)
 │  ├─ updates.js         # manual GitHub Release version check (Settings → Check for updates)
+│  ├─ fingerprint.js     # 4-word key fingerprint (SHA-256 of the key; pure, renderer-safe)
 │  ├─ assets/            # bundled rendering assets (Natural Earth GeoJSON + earth texture)
 │  ├─ crypto.js          # keygen, base64 keys, pair-topic derivation, encrypt stubs (shared, pure)
 │  ├─ swarm.js           # pair-wise Hyperswarm topics, handshake, connections (main process)
@@ -35,7 +36,8 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 │  │  ├─ fsx.js          # bare-fs/bare-path with fs/path fallback + JSON helpers
 │  │  ├─ identity.js     # keypair → data/identity.json
 │  │  ├─ contacts.js     # contacts store → data/contacts.json
-│  │  ├─ settings.js     # interval + core generation + manual-GPS override → data/settings.json
+│  │  ├─ settings.js     # interval + core generation + manual-GPS override + precision → data/settings.json
+│  │  ├─ precision.js    # coarse-location grid snap (snapCoords) + allowed km options (pure)
 │  │  ├─ corelog.js      # local Hypercore (filesystem) + contact-core replication (RAM)
 │  │  └─ scheduler.js    # broadcast timer; GPS crosses the pipe; manual-override short-circuit
 │  ├─ db.js              # IndexedDB wrapper (kept for the contacts unit test only)
@@ -81,7 +83,7 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 
 - `pear run -d` requires a path (use `pear run -d .`).
 - **The project directory path must not contain a space.** Pear URL-encodes a space to `%20` and then fails with `ERR_INVALID_PROJECT_DIR`. This is why the folder is `ichnaea-v2` (hyphen), not `ichnaea v2`.
-- **The renderer must NOT import hyperswarm, hypercore, random-access-*, or any Node builtin (`events`, `streamx`, `stream`).** The Pear renderer's module resolver does not provide Node builtins to app code — importing Hyperswarm there crashed at load with `Cannot find package 'events'` and the map never rendered. The whole P2P stack lives in the **main process** (`index.js` + `src/main/*`); the renderer (`src/main.js`) imports only `pear-pipe`, `staleness.js`, `renderer.js`, `map-styles.js`, `map2d.js`, `country-colors.js`, `scanner.js`, `updates.js`, `qrcode`, `jsqr`.
+- **The renderer must NOT import hyperswarm, hypercore, random-access-*, or any Node builtin (`events`, `streamx`, `stream`).** The Pear renderer's module resolver does not provide Node builtins to app code — importing Hyperswarm there crashed at load with `Cannot find package 'events'` and the map never rendered. The whole P2P stack lives in the **main process** (`index.js` + `src/main/*`); the renderer (`src/main.js`) imports only `pear-pipe`, `staleness.js`, `renderer.js`, `map-styles.js`, `map2d.js`, `country-colors.js`, `scanner.js`, `updates.js`, `fingerprint.js`, `qrcode`, `jsqr`. (`fingerprint.js` is pure — no Node builtins, no DOM — so it is import-safe in the renderer and in Node tests.)
 - **Geolocation is browser-only**, so GPS crosses the pipe: the main-process scheduler sends `gps:request`, the renderer answers `gps:result` (`{lat,lng}` or `{error}`). Never call `navigator.geolocation` in the main process.
 - **Persistence is on the filesystem** (main process, `data/`), not IndexedDB: identity, contacts, settings, and the local Hypercore. File access uses `bare-fs`/`bare-path` with an `fs`/`path` fallback (`src/main/fsx.js`). The renderer's IndexedDB `src/db.js`/`src/contacts.js` are kept only to keep the contacts unit test green.
 - **Hypercore is pinned to v10.** v10 accepts a **directory path** for filesystem RAF storage — `new Hypercore(dir, { keyPair, createIfMissing: true })` (verified: append + reopen + read). v11 uses a Corestore/RocksDB model we don't want. Contact cores use `random-access-memory`. Do not upgrade Hypercore without re-solving storage.

@@ -82,6 +82,14 @@ All projections come from `d3-geo`/`d3-geo-polygon`. The world outline is the bu
 
 ---
 
+## Safety numbers & location precision
+
+**Key fingerprint (`src/fingerprint.js`).** Purely renderer-local and offline: a self-contained SHA-256 of the contact's decoded `publicKeyB64` yields a 4-word pair drawn from a fixed 256-word list. Because it is a pure function of the key (no network, no state), it is unit-testable, deterministic across restarts, and identical on both peers' apps. `publicKeyB64` already reaches the renderer via `toRendererContact` (which strips only `logKeyHex`/`coreKeyHex`), so no main-process change was needed. Shown in the contacts list, on the pin overlay (non-self pins), and live in the Add Contact modal. (The 4×256-word format is inherently a 32-bit signature; SHA-256 derivation keeps the mapping opaque.)
+
+**Location precision (`src/main/precision.js`).** Lives in the **main process** so it can snap the actual appended coordinates. `snapCoords(lat, lng, km)` places the point on a `km/111` grid (1° ≈ 111 km), scaling the longitude step by `cos(lat)` so the grid stays roughly square on the surface, then clamps the result back into `lat ∈ [-90,90]` / `lng ∈ [-180,180]` so a check-in near a pole or the anti-meridian never stores an invalid coordinate; `0` (or non-finite) passes coordinates through unchanged. `doCheckin` applies it before `appendCheckin`, which covers both **scheduled** and **manual** check-ins. The renderer sets it via the `precision:set` pipe message (validated against 0/5/10/25/50) and receives the current value in the `boot` response.
+
+---
+
 ## Why pair-wise swarm topics (not group secrets)
 
 The naive design is a single "group secret" topic that all your contacts join. We rejected it:

@@ -4,6 +4,27 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — Fingerprint verification (#1) + precision dial (#3)
+
+**Status:** shipped Pair 1 of the roadmap on both platforms: a safety-number/key fingerprint for contacts and an optional coarse-location ("snap to grid") setting. No main-process change was needed for the fingerprint (the contact's `publicKeyB64` already reaches the renderer).
+
+**What changed**
+- `src/fingerprint.js` (new, identical in both repos) — pure, deterministic fingerprint: a self-contained SHA-256 of the contact's decoded Base64 public key → a 4-word pair from a fixed 256-word list (e.g. `falcon-fern-ember-dune`). Returns `null` on unparseable input and rejects non-ASCII characters. Import-safe in Node + browser (no Buffer/atob).
+- **Fingerprint UI (renderer):** shown under each contact name in the contacts list, as a `Fingerprint:` row on the pin overlay for non-self pins, and as a **live preview** under the key field in the Add Contact modal (updates as you type or scan, so you verify *before* saving).
+- `src/main/precision.js` (new, both repos) — pure `snapCoords(lat, lng, km)` snapping to a `km/111` grid (longitude scaled by `cos(lat)`), passthrough when `km` is 0/non-finite.
+- **Precision setting (main):** `precisionKm` added to settings defaults; snapped in `doCheckin` (covers scheduled AND manual check-ins); new `precision:set` pipe handler (validates 0/5/10/25/50); `precisionKm` added to the boot response.
+- **Precision UI (renderer):** **Settings → Location precision** dropdown (Off / ~5 / ~10 / ~25 / ~50 km), populated in `initUI`, restored on settings-open + boot, saved via `precision:set`.
+
+**Verification**
+- `npm test` — **48/48 pass, 350/350 asserts** desktop (incl. new `test/fingerprint.test.js` + `test/precision.test.js`); Android suite green (35 tests).
+- Renderer bundles cleanly with esbuild in both repos (fingerprint + precision references present in the bundle).
+- Desktop `pear run` GUI still broken on this box (environmental) — desktop UI changes verified in code + bundle, not a live window.
+
+**Known limits / next steps**
+- Next roadmap pair is the security pair: log-key rotation + forward secrecy (#2) then encrypted at-rest records (#4).
+
+---
+
 ## 2026-08-05 — Tile-freeze fix + broadcast UX (v0.2.1.x)
 
 **Status:** fixed the collapsed-tile freeze (Android) and shipped four broadcast/UX changes on both platforms.
