@@ -29,6 +29,8 @@ const els = {
   setPrecision: $('set-precision'),
   setSelfName: $('set-selfname'),
   btnCheckUpdates: $('btn-check-updates'), updatesStatus: $('updates-status'), updatesDetail: $('updates-detail'),
+  modalUnlock: $('modal-unlock'), unlockPass: $('unlock-passphrase'), unlockErr: $('unlock-error'), unlockConfirm: $('unlock-confirm'),
+  btnEncrypt: $('btn-encrypt'), encryptStatus: $('encrypt-status'), encryptDetail: $('encrypt-detail'),
   manualLat: $('manual-lat'), manualLng: $('manual-lng'), manualEnabled: $('manual-enabled'),
   pinScale: $('set-pinsize'), pinsizeVal: $('pinsize-val'),
   pinOverlay: $('pin-overlay'), pinName: $('pin-name'), pinTime: $('pin-time'), pinAgo: $('pin-ago'), pinStatus: $('pin-status'), pinCoords: $('pin-coords'), pinFingerprint: $('pin-fingerprint'),
@@ -86,7 +88,8 @@ const state = {
   colored: getColored(),
   arcs: getArcs(),
   selfName: '',
-  precisionKm: 0
+  precisionKm: 0,
+  atrest: false
 }
 
 // --- globe (rendered FIRST so a slow/absent pipe never blanks the page) -------
@@ -427,6 +430,7 @@ function initUI () {
     els.pinsizeVal.textContent = state.pinScale.toFixed(1) + '×'
     if (els.setSelfName) els.setSelfName.value = state.selfName
     if (els.setPrecision) els.setPrecision.value = String(state.precisionKm)
+    syncEncryptUI()
     syncManualUI()
     openModal(els.modalSet)
   })
@@ -437,6 +441,13 @@ function initUI () {
   $('btn-checkin-now').addEventListener('click', onCheckinNow)
   if (els.btnCheckUpdates) {
     els.btnCheckUpdates.addEventListener('click', onCheckUpdates)
+  }
+  if (els.unlockConfirm) {
+    els.unlockConfirm.addEventListener('click', onUnlock)
+    els.unlockPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') onUnlock() })
+  }
+  if (els.btnEncrypt) {
+    els.btnEncrypt.addEventListener('click', onEncryptToggle)
   }
   if (els.btnScanQr) {
     els.btnScanQr.addEventListener('click', onScanQr)
@@ -502,6 +513,7 @@ function initUI () {
   els.versionTag.addEventListener('dblclick', () => { syncStyleToggleLabel(); els.devPanel.classList.toggle('open') })
   $('btn-dev-close').addEventListener('click', () => els.devPanel.classList.remove('open'))
   $('btn-force-200').addEventListener('click', onForce200)
+  $('btn-rotate-logkey').addEventListener('click', onRotateLogKey)
   $('btn-toggle-globe').addEventListener('click', onCycleMapStyle)
 }
 
@@ -646,6 +658,68 @@ function syncFreqDisplay () {
   if (els.freqDisplay) els.freqDisplay.textContent = 'Broadcast: every ' + formatFreq(state.intervalMs)
 }
 
+// Reflect the current at-rest-encryption state in the Settings "Local data" row.
+function syncEncryptUI () {
+  if (!els.btnEncrypt) return
+  if (state.atrest) {
+    els.btnEncrypt.textContent = 'Remove local encryption'
+    if (els.encryptStatus) els.encryptStatus.textContent = 'On'
+    if (els.encryptDetail) els.encryptDetail.textContent = 'Your local data is encrypted with your passphrase. A forgotten passphrase means unrecoverable data.'
+  } else {
+    els.btnEncrypt.textContent = 'Encrypt local data'
+    if (els.encryptStatus) els.encryptStatus.textContent = 'Off'
+    if (els.encryptDetail) els.encryptDetail.textContent = 'Encrypt your local records (identity, contacts, settings) with a passphrase.'
+  }
+}
+
+// Toggle at-rest encryption from Settings. Enable: prompt for a passphrase
+// (twice) and send passphrase:set. Disable: prompt for the passphrase and send
+// passphrase:disable. The passphrase crosses the pipe once and never leaves the
+// main process after that.
+async function onEncryptToggle () {
+  if (!els.btnEncrypt) return
+  if (state.atrest) {
+    const pass = prompt('Enter your current passphrase to remove local encryption:')
+    if (pass === null) return
+    try {
+      await request('passphrase:disable', { passphrase: pass })
+      state.atrest = false
+      syncEncryptUI()
+      toast('Local encryption removed')
+    } catch (err) {
+      toast('Couldn\u2019t disable: ' + String(err.message || err))
+    }
+    return
+  }
+  const pass = prompt('Choose a passphrase to encrypt your local data (min 8 characters):')
+  if (pass === null) return
+  if (String(pass).length < 8) { toast('Passphrase must be at least 8 characters'); return }
+  const confirm = prompt('Confirm your passphrase:')
+  if (confirm !== pass) { toast('Passphrases did not match'); return }
+  try {
+    await request('passphrase:set', { passphrase: pass })
+    state.atrest = true
+    syncEncryptUI()
+    toast('Local data encrypted')
+  } catch (err) {
+    toast('Couldn\u2019t encrypt: ' + String(err.message || err))
+  }
+}
+
+// Unlock encrypted local data at boot with the passphrase.
+async function onUnlock () {
+  const pass = els.unlockPass.value
+  els.unlockErr.textContent = ''
+  if (!pass) { els.unlockErr.textContent = 'Enter your passphrase'; return }
+  try {
+    await request('passphrase:unlock', { passphrase: pass })
+    closeModal(els.modalUnlock)
+    await loadState() // re-load state; the globe/UI were already initialized
+  } catch (err) {
+    els.unlockErr.textContent = String(err.message || err)
+  }
+}
+
 async function onSaveSettings () {
   const ms = freqFromDropdowns()
   if (!ms || ms <= 0) { els.setErr.textContent = 'Pick a valid interval'; return }
@@ -743,9 +817,21 @@ async function onForce200 () {
   }
 }
 
+// Dev: rotate the log key (forward secrecy) + core on demand.
+async function onRotateLogKey () {
+  els.devStatus.textContent = 'rotating log key…'
+  try {
+    await request('dev:rotate-logkey', {}, 30000)
+    els.devStatus.textContent = 'log key rotated.'
+  } catch (err) {
+    els.devStatus.textContent = 'error: ' + String(err.message || err)
+  }
+}
+
 // --- boot ------------------------------------------------------------------------
 async function boot () {
-  // Globe first — renders even if the pipe/main is slow or absent.
+  // Globe first — renders even if the pipe/main is slow or absent. This one-time
+  // setup runs once; unlocking encrypted local data re-loads state (not UI).
   initGlobe()
   initUI()
   startStalenessSweep()
@@ -764,8 +850,24 @@ async function boot () {
     handlePush(msg)
   })
 
-  // Ask the main process for the current state.
+  await loadState()
+}
+
+// Ask the main process for the current state and render it. Re-run after
+// unlocking encrypted local data; it does NOT re-init the globe/UI.
+async function loadState () {
   const res = await request('boot')
+  if (res.locked) {
+    // Local data is passphrase-encrypted — prompt for the passphrase first.
+    state.atrest = true
+    openModal(els.modalUnlock)
+    els.unlockErr.textContent = ''
+    els.unlockPass.value = ''
+    els.unlockPass.focus()
+    return
+  }
+  state.atrest = Boolean(res.atrest)
+  syncEncryptUI()
   els.myPubkey.textContent = res.publicKeyB64
   state.intervalMs = res.intervalMs || DEFAULT_INTERVAL_MS
   const { value: fv, unitId: fu } = freqSplit(state.intervalMs)

@@ -4,6 +4,33 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.3 release (security pair)
+
+**Status:** bumped both repos to **0.2.3** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 5`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.3-debug.apk` (SHA `8ad6f572…fea0`) and a GitHub Release `v0.2.3` published, so the **in-app updater** (installed with 0.2.2) can update the phone 0.2.2 → 0.2.3 entirely in the app. Contents: log-key rotation (#2) + at-rest passphrase encryption (#4).
+
+**Known limits / next steps**
+- Remaining roadmap: reliability (#5 DHT, #6 auto-reconnect), UX (#8-#12), process/polish (#13-#15).
+
+---
+
+## 2026-08-05 — Security pair: log-key rotation (#2) + at-rest encryption (#4)
+
+**Status:** shipped the crypto pair on both platforms.
+
+**What changed**
+- **#2 Log-key rotation + forward secrecy [M]:** `identity.json` now keeps a windowed `logKeyHistory` (last 3 `{coreGeneration → key}`). `rotateIdentityLogKey` rotates the symmetric log key; `app.rotateCore(true)` (the normal MAX_ENTRIES rotation + a new dev-panel "Rotate log key" button) rotates key + core together and re-shares the new key with live contacts via new `swarm.refreshLogKey()` (peer enc-pub key now remembered per conn). `readLatest` accepts a candidate-key array so a core stays decryptable across a rotation boundary, then old keys drop.
+- **#4 Encrypted at-rest records [M]:** **Settings → Encrypt local data** protects `identity.json`/`contacts.json`/`settings.json`. `crypto.deriveAtRestKey(passphrase, salt)` (salted BLAKE2b-256; documented deviation from HKDF-SHA256 for Node 12) → XSalsa20-Poly1305 AEAD. `fsx.js` encrypts/decrypts the three stores transparently (with plaintext read/write helpers for the enable/disable migration); a plaintext `data/atrest.json` marker records enabled + salt. Boot defers loading until `passphrase:unlock` (renderer unlock modal); `passphrase:set` / `passphrase:disable` toggle it.
+- `dataDir()` now honors `ICHNAEA_DATA_DIR` (matches Android NodeService), enabling temp-dir unit tests.
+
+**Verification**
+- `npm test` — **56/56 pass (380 asserts)** desktop (incl. new `test/rotate-logkey.test.js` + `test/atrest.test.js`); Android suite green (352 asserts).
+- Renderer bundles cleanly in both repos (esbuild); Android bundle rebuilt + APK shipped to `dist/`.
+
+**Known limits / next steps**
+- Remaining roadmap: reliability (#5 DHT, #6 auto-reconnect), UX (#8-#12), process/polish (#13-#15). #7 (two-phone E2E) already verified by the user.
+
+---
+
 ## 2026-08-05 — v0.2.2 release (autoupdate test)
 
 **Status:** bumped both repos to **0.2.2** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android also `versionCode 4`). Android APK rebuilt and shipped to `dist/ichnaea-android-v0.2.2-debug.apk` (SHA `81a36f91…059ff`), with a GitHub Release `v0.2.2` published so the in-app **Check for updates** can be tested from the v0.2.1 build already on the phone. Added **in-app updating** on Android: when a newer release is found, an **Update now** button downloads the APK and hands it to the Android package installer via a native `IchnaeaUpdaterPlugin` (FileProvider content URI; requests "Install unknown apps" on Android 8+). Two-phone-over-different-networks E2E sync verified by the user.

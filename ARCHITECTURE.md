@@ -90,6 +90,26 @@ All projections come from `d3-geo`/`d3-geo-polygon`. The world outline is the bu
 
 ---
 
+## Log-key rotation (forward secrecy)
+
+Each user's local core blocks are encrypted with their symmetric **log key** (XSalsa20-Poly1305, `crypto.encrypt`/`decrypt`). The log key lives in `identity.json` alongside a windowed history `logKeyHistory` (last 3 `{coreGeneration → key}` entries, newest first).
+
+- `rotateIdentityLogKey(identity, gen)` (`identity.js`) generates a fresh key, pushes the current one into the history (trimmed to 3), and persists it.
+- `app.rotateCore(rotateLogKey)` — the normal MAX_ENTRIES core rotation passes `true`, so the log key is rotated together with the core. A fresh core generation is opened (encrypted with the new key) and the new key is re-sealed to contacts over the handshake: `swarm.refreshHello()` (new core key) + `swarm.refreshLogKey()` (new log key on live conns, via a stored per-conn peer enc-pub key).
+- `readLatest` accepts an array of candidate keys, so the current key plus the retained history can decrypt a core across a rotation boundary. Old generations' blocks stay readable only while their key is retained, then drop.
+- Dev-panel **Rotate log key** exercises it on demand (`dev:rotate-logkey`).
+
+## At-rest passphrase encryption
+
+Opt-in protection for the JSON stores `identity.json` / `contacts.json` / `settings.json` (`src/main/fsx.js`):
+
+- **KDF:** `deriveAtRestKey(passphrase, salt)` = salted **BLAKE2b-256** `crypto_generichash` (Node 12/NodeJS-Mobile lacks `crypto.hkdf`, and libsodium exposes BLAKE2b rather than HMAC-SHA256; sound for a salted KDF). The salt is a random 16 bytes stored in the plaintext marker `data/atrest.json`.
+- **Cipher:** each file is written as an envelope `{ v:1, data }` where `data` is `encrypt(JSON, key)` — XSalsa20-Poly1305 with an embedded nonce. `fsx.readJson`/`writeJson` transparently encrypt/decrypt the three store files when at-rest encryption is enabled and a key is set; `readJsonPlain`/`writeJsonPlain` are used only for the enable/disable migration.
+- **Boot/unlock flow (`app.js`):** at boot, if the marker says encryption is on, the main process stays **locked** (it doesn't touch the encrypted stores). The renderer shows an unlock modal and sends `passphrase:unlock`; the main process derives the key, verifies it by reading `identity.json`, then runs `initialize()`. The passphrase crosses the pipe once and is never persisted.
+- **Messages:** `passphrase:set` (enable: derive a fresh salt+key, re-encrypt all three stores, write the marker), `passphrase:unlock` (boot), `passphrase:disable` (verify passphrase, decrypt stores back to plaintext, clear the marker). A wrong passphrase fails AEAD auth and is reported as "Wrong passphrase". Forgotten passphrase = unrecoverable data (documented in the UI).
+
+---
+
 ## Why pair-wise swarm topics (not group secrets)
 
 The naive design is a single "group secret" topic that all your contacts join. We rejected it:

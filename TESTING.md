@@ -114,6 +114,16 @@
 - [ ] **Covers manual check-ins:** with precision set, a manual "Check in here" is also snapped to the grid.
 - [ ] **No side effects:** fingerprint + precision do not affect P2P connectivity, other settings, or any map style.
 
+## 5h. Log-key rotation + at-rest encryption
+
+- [ ] **Log-key rotation (dev):** open the hidden dev panel (double-tap version tag) → **Rotate log key** → status shows "log key rotated." A fresh core generation is opened and the new key is re-shared with contacts; existing connections keep syncing.
+- [ ] **Rotation survival:** after rotating, check in again and reload — your own last pin still shows (the current key decrypts the current core; retained history decrypts recent blocks).
+- [ ] **Encrypt local data:** Settings → **Encrypt local data** → choose + confirm a passphrase (min 8 chars) → status shows **On**; mismatched confirmations are rejected.
+- [ ] **Reload requires unlock:** after enabling, reload the app → an **Unlock** modal appears; entering the wrong passphrase shows "Wrong passphrase"; the correct passphrase unlocks and the app loads normally.
+- [ ] **Data protected at rest:** with encryption on, `data/identity.json` / `contacts.json` / `settings.json` on disk are opaque envelopes (no plaintext JSON), while a plaintext `data/atrest.json` marker records the salt.
+- [ ] **Remove encryption:** Settings → **Remove local encryption** → enter the current passphrase → status returns to **Off** and the stores are plaintext again.
+- [ ] **No side effects:** encryption/rotation do not affect P2P connectivity, map rendering, or other settings.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.
