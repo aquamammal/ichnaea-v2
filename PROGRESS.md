@@ -4,6 +4,27 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.7 release (critical swarm fix from #14)
+
+**Status:** bumped both repos to **0.2.7** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 9`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.7-debug.apk` (SHA `f19c8b48…80e8`) and a GitHub Release `v0.2.7` published, so the in-app updater can update the phone 0.2.6 → 0.2.7. Contents: the `byPubKey` swallowed-declaration fix (critical — crashed swarm joins whenever a contact existed) + the `process` env guard found while debugging `pear run` (#14).
+
+**Known limits / next steps**
+- Remaining roadmap: #9 (stale notifications), #10 (desktop globe), #15 (version auto-sync test). #14: app bugs fixed; desktop GUI still blocked by the global Pear runtime's Electron bundle loader (documented; migration path = `pear-runtime`).
+
+---
+
+## 2026-08-05 — #14 `pear run` environmental fix — app bugs found + fixed
+
+**Status:** `pear run` on this box now boots the **main process** (P2P stack starts) after fixing two real app bugs it exposed. The renderer window still fails to boot due to the **global Pear runtime's Electron bundle loader** (Node v20 parses the JSON `.bundle` manifest as JS → `SyntaxError: Unexpected token ':'`) — the documented environmental limitation that also affects the sibling v1 project. Path forward: migrate the desktop launcher to the `pear-runtime` module (Pear 3 removed `pear run`) or update the global Pear runtime (needs root; `npm -g` prefix is `/usr/local`).
+
+**App bugs found + fixed (both repos):**
+- `src/main/app.js` — `parseBootstrap(process.env.ICHNAEA_BOOTSTRAP)` crashed with `process is not defined` because the Pear/Bare main-process runtime doesn't inject the `process` global (fsx.js guards it for the same reason). Now reads env defensively.
+- `src/swarm.js` — a line-comment swallowed `const byPubKey = new Map()` (two declarations joined on one line), so `joinContact`/`handleHelloFrame` crashed with `byPubKey is not defined` at runtime. **This is a latent crash shipped in the 0.2.4–0.2.6 Android APKs** (only fires when a contact exists). Fixed; added `test/swarm-integrity.test.js` so a swallowed declaration can never regress silently.
+
+**Verification:** `npm test` green in both repos (incl. new guard test). Desktop main process boots under `pear run`; GUI still blocked by the global runtime (above).
+
+---
+
 ## 2026-08-05 — v0.2.6 release (offline queue + desktop release)
 
 **Status:** bumped both repos to **0.2.6** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 8`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.6-debug.apk` (SHA `77b26c92…3882`) and a GitHub Release `v0.2.6` published, so the in-app updater can update the phone 0.2.5 → 0.2.6. Contents: offline check-in queue (#12). Also published a GitHub Release for `ichnaea-v2` so the desktop checker reports correctly (#13).

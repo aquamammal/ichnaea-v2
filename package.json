@@ -1,6 +1,6 @@
 {
   "name": "ichnaea-v2",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Periodic Check-In Beacon — P2P privacy-first location check-ins over Pear/Holepunch",
   "main": "index.js",
   "type": "module",
@@ -23,6 +23,7 @@
   "devDependencies": {
     "brittle": "^3.0.0",
     "fake-indexeddb": "^6.2.5",
+    "pear": "^3.0.0",
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
