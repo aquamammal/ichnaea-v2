@@ -4,6 +4,21 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — #15 version auto-sync test
+
+**Status:** shipped on both platforms (test-only).
+
+**What changed**
+- Exported `APP_VERSION` from `src/updates.js` and added `test/version-sync.test.js` (works for both repos via the `package.json` name): asserts `APP_VERSION` === `package.json` version === the on-screen beacon title + version tag (`src/index.html`) === (on Android, when the gitignored platform exists) the gradle `versionName`. A forgotten version bump now fails `npm test` immediately (verified with a negative test: desyncing to `9.9.9` fails, restoring passes).
+
+**Verification**
+- `npm test` — **62/62 pass (492 asserts)** desktop; Android **465 asserts**. All green.
+
+**Known limits / next steps**
+- Remaining roadmap: #9 (stale notifications, native), #10 (desktop globe; blocked by #14's global-Pear GUI issue).
+
+---
+
 ## 2026-08-05 — v0.2.7 release (critical swarm fix from #14)
 
 **Status:** bumped both repos to **0.2.7** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 9`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.7-debug.apk` (SHA `f19c8b48…80e8`) and a GitHub Release `v0.2.7` published, so the in-app updater can update the phone 0.2.6 → 0.2.7. Contents: the `byPubKey` swallowed-declaration fix (critical — crashed swarm joins whenever a contact existed) + the `process` env guard found while debugging `pear run` (#14).
