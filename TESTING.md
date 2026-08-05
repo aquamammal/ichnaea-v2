@@ -88,6 +88,13 @@
 - [ ] **Click to center:** click a contact row (or a pin) → the map pans so they're centered; the pin overlay opens.
 - [ ] All of the above work in every map style and in the Dymaxion projection.
 
+## 5e. Update check (Settings → Check for updates)
+
+- [ ] Button exists in Settings and does nothing until tapped (no network on boot — verify with an offline/airplane test: the app boots fine and only the check reports "Couldn't check").
+- [ ] With a newer GitHub Release published, tapping shows **Update available (v→v)** and a tap-to-download link opens the release/APK.
+- [ ] With no newer release (or none published), tapping shows **You're up to date** (or "No releases published yet").
+- [ ] Works identically on Android and desktop.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.

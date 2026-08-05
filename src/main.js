@@ -4,6 +4,7 @@ import { createRenderer } from './renderer.js'
 import { MAP_STYLES, getMapStyleId, setMapStyleId, getColored, setColored } from './map-styles.js'
 import QRCode from 'qrcode/lib/browser.js'
 import { openScanner } from './scanner.js'
+import { checkForUpdates } from './updates.js'
 
 // Renderer for Ichnaea v2. This is a THIN PIPE CLIENT: it owns only the globe,
 // the UI, and geolocation. ALL P2P state (identity, contacts, the local
@@ -23,6 +24,7 @@ const els = {
   modalAdd: $('modal-add'), addNick: $('add-nickname'), addPub: $('add-pubkey'), addErr: $('add-error'), btnScanQr: $('btn-scan-qr'),
   modalSet: $('modal-settings'), setInterval: $('set-interval'), setErr: $('set-error'), setMapStyle: $('set-mapstyle'),
   setSelfName: $('set-selfname'),
+  btnCheckUpdates: $('btn-check-updates'), updatesStatus: $('updates-status'), updatesDetail: $('updates-detail'),
   manualLat: $('manual-lat'), manualLng: $('manual-lng'), manualEnabled: $('manual-enabled'),
   pinScale: $('set-pinsize'), pinsizeVal: $('pinsize-val'),
   pinOverlay: $('pin-overlay'), pinName: $('pin-name'), pinTime: $('pin-time'), pinAgo: $('pin-ago'), pinStatus: $('pin-status'), pinCoords: $('pin-coords'),
@@ -355,6 +357,9 @@ function initUI () {
   $('add-confirm').addEventListener('click', onAddContact)
   $('set-confirm').addEventListener('click', onSaveSettings)
   $('btn-checkin-now').addEventListener('click', onCheckinNow)
+  if (els.btnCheckUpdates) {
+    els.btnCheckUpdates.addEventListener('click', onCheckUpdates)
+  }
   if (els.btnScanQr) {
     els.btnScanQr.addEventListener('click', onScanQr)
   }
@@ -503,6 +508,35 @@ async function onScanQr () {
   } catch (err) {
     openModal(els.modalAdd)
     els.addErr.textContent = 'Camera unavailable: ' + String(err && err.message || err)
+  }
+}
+
+// Manual update check (Settings → Check for updates). Only makes a network
+// request when tapped — no traffic on boot or in the background.
+async function onCheckUpdates () {
+  if (!els.btnCheckUpdates) return
+  els.btnCheckUpdates.disabled = true
+  els.updatesStatus.textContent = '…'
+  els.updatesDetail.textContent = 'Checking GitHub…'
+  const res = await checkForUpdates()
+  els.btnCheckUpdates.disabled = false
+  if (!res.ok) {
+    els.updatesStatus.textContent = ''
+    els.updatesDetail.textContent = 'Couldn’t check: ' + (res.error || 'network error')
+    return
+  }
+  if (res.updateAvailable) {
+    els.updatesStatus.textContent = '!'
+    els.updatesDetail.textContent = `v${res.current} → v${res.latest} available. ` +
+      `Tap to download: ${res.assetUrl || res.releaseUrl}`
+    els.updatesDetail.title = res.assetUrl || res.releaseUrl
+    els.updatesDetail.style.cursor = 'pointer'
+    els.updatesDetail.onclick = () => { if (res.assetUrl) window.open(res.assetUrl, '_blank') }
+  } else {
+    els.updatesStatus.textContent = '✓'
+    els.updatesDetail.textContent = `You're up to date (v${res.current}).`
+    els.updatesDetail.onclick = null
+    els.updatesDetail.style.cursor = 'default'
   }
 }
 

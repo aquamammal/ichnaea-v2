@@ -4,6 +4,27 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — Manual "Check for updates" (GitHub Release tag)
+
+**Status:** added a manual, opt-in update check to both apps. Preserves zero-telemetry: no network request happens on boot or in the background — only when the user taps **Settings → Check for updates**.
+
+**What changed**
+- `src/updates.js` (new) — fetches `releases/latest` from GitHub for the app's repo, compares tags with numeric semver ordering, and returns the new version + APK/release URL. `APP_VERSION` + `REPO` are per-repo.
+- Settings modal gains a **Check for updates** button + status line: shows "Update available (v→v), tap to download" or "You're up to date".
+- Version marker is the **GitHub Release tag** (e.g. `v0.2.2`); a release must be published per version (`gh release create`). Release flow documented in READMEs.
+- Desktop: `test/updates.test.js` added — 13 new asserts covering version parsing + comparison.
+
+**Verification**
+- `npm test` — **36/36 pass, 74/74 asserts** desktop; **23/23** Android.
+- Live checks in Node: desktop repo (no releases) → "No releases published yet"; android repo (stale v0.1.0 release vs local 0.2.1) → correctly "not newer".
+- `node --check` on all changed `.js` in both repos — OK.
+
+**Known limits / next steps**
+- Requires you to actually publish GitHub Releases (`gh release create vX.Y.Z <apk>`) — otherwise the checker reports "up to date / no releases".
+- Manual only by design (privacy). If automatic checks are ever wanted, they'd need an explicit user toggle + a documented telemetry exception.
+
+---
+
 ## 2026-08-05 — v0.2.1: rename contacts, self-name, click-to-center + str.trim fix
 
 **Status:** three UX features + a renderer crash fix, shipped identically on Android and desktop.

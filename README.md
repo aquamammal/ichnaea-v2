@@ -22,6 +22,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Rename contacts:** long-press a contact (or right-click on desktop) to rename them — local-only, never sent to the peer.
 - **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
 - **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.
+- **Update check:** **Settings → Check for updates** fetches the latest **GitHub Release** for this repo and reports if a newer build exists. Manual and opt-in — no network on boot or in the background (preserves zero-telemetry).
 
 ---
 

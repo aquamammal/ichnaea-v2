@@ -12,6 +12,7 @@ An honest assessment of the current security posture. This is an **MVP**; severa
 - **Local-only secret key.** Your Ed25519 secret key is generated on-device and never transmitted or displayed.
 - **No servers, no telemetry.** There is no central service to breach or to log your movements. Data flows directly between the two peers.
 - **Offline rendering, zero third-party requests.** The map is drawn from the bundled Natural Earth world outline (`src/assets/world.js`) via local `d3-geo` projections — equirectangular, self-centered, or Dymaxion. The colored-countries toggle uses the same local data, and the public-key QR code is generated and scanned locally (`qrcode` for display, `jsqr` + `getUserMedia` for camera scanning — the stream never leaves the device). There are **no map-tile servers, no CDN, no third-party requests** involved, so no remote service learns when or where you look.
+- **The only outbound request is the manual update check.** **Settings → Check for updates** fetches the app's GitHub `releases/latest` — but only when the user taps it. There is no traffic on boot or in the background; disabling the check is as simple as never tapping it. Everything else (P2P replication, rendering, QR, GPS) is peer-to-peer or local.
 
 ---
 
