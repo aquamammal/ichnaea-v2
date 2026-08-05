@@ -76,9 +76,9 @@
 - [ ] Click again → back to the plain dark landmass (**Off**).
 - [ ] **Persistence:** toggle On, reload → still On; toggle Off, reload → still Off. No reload is needed to apply it (live `setColored`).
 - [ ] **QR button:** click **QR** next to the public key → a modal shows a scannable QR code of your public key plus the key text.
-- [ ] Scanning the QR with any QR reader (e.g. a phone camera) yields your Base64 public key, and pasting that into another app's "Add Contact" pairs correctly.
+- [ ] **Scan QR code:** in **Add Contact**, click **Scan QR code** → the camera opens (OS permission prompt on first use), and pointing it at the other app's on-screen QR fills the public-key field automatically. Works phone-to-phone and phone-to-desktop.
 - [ ] Tapping the key text in the QR modal copies it.
-- [ ] QR is generated locally (works offline).
+- [ ] QR share + scan are generated locally (work offline; no network involved).
 
 ## 6. Stale peer handling
 

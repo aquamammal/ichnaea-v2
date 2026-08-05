@@ -4,6 +4,29 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — QR code scanning (camera) in Add Contact
+
+**Status:** the apps can now scan a friend's QR code with the camera, not just display their own. Implemented identically on Android and desktop.
+
+**What changed**
+- `src/scanner.js` (new) — full-screen camera modal: `getUserMedia({ video: { facingMode: 'environment' } })`, decodes frames on-device with `jsqr`, resolves with the decoded text, tears down the stream on success/cancel. Exports `openScanner()` and `closeScanner()` (close resolves the pending promise with `null` so callers never hang). Module is import-safe outside a browser (no DOM/media access at import).
+- **Add Contact** modal gains a **Scan QR code** button in both builds — scans and fills the public-key field automatically (strips any `ichnaea:`/`beacon:`/`iot:` scheme prefix).
+- Android: added `android.permission.CAMERA` to `AndroidManifest.xml`; the Capacitor WebView grants `VIDEO_CAPTURE` requests when the app holds that permission.
+- Desktop (Pear/Electron): Chromium grants media requests by default, so no main-process change was needed.
+- `package.json`: added `jsqr` (pure JS, zero telemetry).
+
+**Verification**
+- `npm test` — **32/32 pass (61 asserts)** desktop; **23/23** Android.
+- Scanner smoke-tested in Node with stubbed DOM/media: module imports safely, camera starts, and `closeScanner()` resolves the pending promise with `null` (fixed a hang where it didn't).
+- Android renderer bundle rebuilt and verified to contain `openScanner`, `jsqr`, and `btn-scan-qr`.
+- `node --check` on all changed `.js` — OK.
+
+**Known limits / next steps**
+- `pear run` GUI still broken on this Linux box (environmental) — on-camera behavior needs a real device to confirm; the decode/teardown logic is smoke-tested in Node.
+- Android camera permission is prompted on first scan (Capacitor's WebChromeClient handles the grant); if denied, Add Contact shows "Camera unavailable".
+
+---
+
 ## 2026-08-05 — Colored-countries toggle + QR public-key sharing
 
 **Status:** added two renderer/UI features, ported identically to the Android build.

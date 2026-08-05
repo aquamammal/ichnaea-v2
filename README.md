@@ -17,7 +17,8 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - Colors pins by freshness: **green = active**, **gray = stale**, and removes pins that go silent too long.
 - **User-selectable 2D maps:** pick a projection in **Settings → Map style** — **Map** (equirectangular, Taiwan-centered), **Map — Centered on Me** (re-centers on your check-in), or **Map — Dymaxion** (Fuller's Airocean projection). All rendering uses the bundled Natural Earth world outline — **no map tiles, no CDN, zero third-party requests**.
 - **Colored countries toggle:** a live button on the Check-In Beacon tile (`Colored countries` On/Off) fills each country with its own hue in every map projection. Persisted, applied at boot, toggles in place — no reload needed.
-- **QR code sharing:** the `QR` button next to your public key renders it as a scannable QR code (local `qrcode` lib — no network), plus the key text for manual copy. A friend scans it with their phone camera (or any QR reader) to get your Base64 public key for "Add Contact".
+- **QR code sharing:** the `QR` button next to your public key renders it as a scannable QR code (local `qrcode` lib — no network), plus the key text for manual copy.
+- **QR code scanning:** **Add Contact** has a **Scan QR code** button that opens the camera and decodes a friend's on-screen QR on-device (local `jsqr` lib — zero telemetry), filling the public-key field automatically. Requires **camera permission** (your OS prompts on first use).
 
 ---
 
@@ -144,8 +145,8 @@ npm test
 ## Pairing two machines (the actual "use it with a friend" step)
 
 1. Both of you run the app. Your **Base64 public key** is shown in the **top-left panel** (click it to copy, or use the **QR** button to display it as a scannable code).
-2. Swap keys through any channel you trust (Signal, email, in person — or the friend scans your on-screen QR with their phone camera).
-3. Each of you clicks **Add Contact**, pastes the *other's* key, and gives it a nickname.
+2. Swap keys through any channel you trust (Signal, email, in person — or have the friend scan your on-screen QR with Ichnaea's **Add Contact → Scan QR code**).
+3. Each of you clicks **Add Contact**, pastes the *other's* key (or scans it), and gives it a nickname.
 4. **Both sides must add each other** — the pair-wise topic needs both keys, so a one-sided add will not connect.
 5. Same LAN connects fast. Over the internet, Hyperswarm uses a DHT and may take **10–30 seconds** to find each other. When someone checks in, the pin appears on the other's map.
 
@@ -156,9 +157,9 @@ npm test
 There is no account system and no server to look people up. Adding a contact is a manual, out-of-band exchange of public keys:
 
 1. **You** open the app. Your Base64 public key is shown in the UI (top-left panel).
-2. You send that key to your friend through any channel you already trust — email, Signal, in person, or the built-in **QR** button (a friend scans it with their phone camera or any QR reader).
+2. You send that key to your friend through any channel you already trust — email, Signal, in person, or the built-in **QR** button.
 3. **Your friend** does the same and sends you *their* key.
-4. In the app, click **Add Contact**, paste their Base64 public key, and give them a **local nickname** (only you see this).
+4. In the app, click **Add Contact**, paste their Base64 public key (or click **Scan QR code** and point the camera at their on-screen QR), and give them a **local nickname** (only you see this).
 5. The app derives a deterministic pair-wise topic from your two keys and joins it. When your friend does the same, you find each other directly, peer-to-peer.
 
 Because the topic is derived from **both** public keys, only the two of you can ever compute it. There is no shared "group secret" to leak.
@@ -238,6 +239,7 @@ Read `ARCHITECTURE.md` for the data flow and `SECURITY.md` for an honest threat 
 │  ├─ renderer.js        # map-style dispatcher -> builds the 2D renderer (renderer)
 │  ├─ map2d.js           # 2D canvas map: equirectangular / self-centered / Dymaxion projections
 │  ├─ country-colors.js  # shared per-country color palette (colored-countries mode)
+│  ├─ scanner.js         # camera QR scanner (getUserMedia + jsqr, on-device)
 │  ├─ assets/            # bundled rendering assets (zero telemetry: no tiles, no CDN)
 │  │  └─ ne_110m_admin_0_countries.geojson  # Natural Earth 110m world outline (public domain)
 │  ├─ crypto.js          # keygen, base64 keys, pair-topic derivation, X25519 log-key exchange + per-block AEAD (shared, pure)
@@ -269,7 +271,8 @@ Read `ARCHITECTURE.md` for the data flow and `SECURITY.md` for an honest threat 
 > for filesystem RAF storage (`new Hypercore(dir, { keyPair })`). Contact cores are kept in
 > RAM. The renderer never imports hyperswarm/hypercore/random-access — only `pear-pipe`,
 > `staleness.js`, and the map renderer modules. `d3-geo` + `d3-geo-polygon` power the map
-> projections; `qrcode` generates the public-key QR code locally.
+> projections; `qrcode` generates and `jsqr` decodes the public-key QR code — both fully
+> local (no telemetry).
 
 ## License
 
