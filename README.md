@@ -17,7 +17,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - Colors pins by freshness: **green = active**, **gray = stale**, and removes pins that go silent too long.
 - **User-selectable 2D maps:** pick a projection in **Settings → Map style** — **Map** (equirectangular, Taiwan-centered), **Map — Centered on Me** (re-centers on your check-in), or **Map — Dymaxion** (Fuller's Airocean projection). All rendering uses the bundled Natural Earth world outline — **no map tiles, no CDN, zero third-party requests**.
 - **Colored countries toggle:** a live button on the Check-In Beacon tile (`Colored countries` On/Off) fills each country with its own hue in every map projection. Persisted, applied at boot, toggles in place — no reload needed.
-- **QR code sharing:** the `QR` button next to your public key renders it as a scannable QR code (local `qrcode` lib — no network), plus the key text for manual copy. A friend scans it into Ichnaea's "Add Contact" to pair.
+- **QR code sharing:** the `QR` button next to your public key renders it as a scannable QR code (local `qrcode` lib — no network), plus the key text for manual copy. A friend scans it with their phone camera (or any QR reader) to get your Base64 public key for "Add Contact".
 
 ---
 
@@ -143,8 +143,8 @@ npm test
 
 ## Pairing two machines (the actual "use it with a friend" step)
 
-1. Both of you run the app. Your **Base64 public key** is shown in the **top-left panel** (click it to copy).
-2. Swap keys through any channel you trust (Signal, email, in person).
+1. Both of you run the app. Your **Base64 public key** is shown in the **top-left panel** (click it to copy, or use the **QR** button to display it as a scannable code).
+2. Swap keys through any channel you trust (Signal, email, in person — or the friend scans your on-screen QR with their phone camera).
 3. Each of you clicks **Add Contact**, pastes the *other's* key, and gives it a nickname.
 4. **Both sides must add each other** — the pair-wise topic needs both keys, so a one-sided add will not connect.
 5. Same LAN connects fast. Over the internet, Hyperswarm uses a DHT and may take **10–30 seconds** to find each other. When someone checks in, the pin appears on the other's map.
@@ -156,7 +156,7 @@ npm test
 There is no account system and no server to look people up. Adding a contact is a manual, out-of-band exchange of public keys:
 
 1. **You** open the app. Your Base64 public key is shown in the UI (top-left panel).
-2. You send that key to your friend through any channel you already trust — email, Signal, a QR code, your personal website, read it out in person.
+2. You send that key to your friend through any channel you already trust — email, Signal, in person, or the built-in **QR** button (a friend scans it with their phone camera or any QR reader).
 3. **Your friend** does the same and sends you *their* key.
 4. In the app, click **Add Contact**, paste their Base64 public key, and give them a **local nickname** (only you see this).
 5. The app derives a deterministic pair-wise topic from your two keys and joins it. When your friend does the same, you find each other directly, peer-to-peer.

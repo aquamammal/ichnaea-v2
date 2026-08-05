@@ -74,7 +74,7 @@ All projections come from `d3-geo`/`d3-geo-polygon`. The world outline is the bu
 
 **Colored countries toggle.** A live button on the Check-In Beacon tile fills each country with its own hue in every projection. The palette lives in `src/country-colors.js` (hue hashed from the feature index — stable across sessions), the flag persists under the `coloredCountries` localStorage key, and the renderer's `setColored()` swaps the fill per frame without a rebuild or reload. On the Android build the same toggle colors the 3D globe too.
 
-**QR code sharing.** The `QR` button next to your public key renders it as a scannable QR code using the bundled `qrcode` library (`QRCode.toCanvas` — fully local, no network), with the key text underneath for manual copy. A friend scans it into Ichnaea's "Add Contact" to pair.
+**QR code sharing.** The `QR` button next to your public key renders it as a scannable QR code using the bundled `qrcode` library (`QRCode.toCanvas` — fully local, no network), with the key text underneath for manual copy. A friend scans it with their phone camera (or any QR reader) to get your Base64 public key, then pastes it into "Add Contact".
 
 **Performance:** the landmass + graticule are rendered once per fit as resolution-independent `Path2D` objects and then blitted through the zoom/pan affine transform each frame. Colored mode keeps a per-country `Path2D` array from the same fit. This avoids re-projecting all 177 countries every frame (especially expensive for Dymaxion, where each polygon is clipped into many pieces). If a WebView lacks `Path2D`, the renderer degrades to per-frame re-projection.
 
