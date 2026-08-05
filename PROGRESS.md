@@ -4,6 +4,18 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.9 release (in-app "Update now" fix + `npm run dev` fix)
+
+**Status:** bumped both repos to **0.2.9** (Android `versionCode 11`). Android APK shipped to `dist/ichnaea-android-v0.2.9-debug.apk` (SHA `fb9932ac…72c2`) + GitHub Release `v0.2.9`.
+
+**Fixes**
+- **In-app "Update now" did nothing:** `onUpdateNow` was defined but its click listener was never bound (lost in an earlier refactor), so tapping the button was a silent no-op. Re-added `els.btnUpdateNow.addEventListener('click', onUpdateNow)`. Also made Capacitor plugin resolution robust (`capPlugin()` falls back to `window.Capacitor.registerPlugin`) for both the updater and the notify plugin.
+- **`npm run dev` failed with "pear run has been removed":** the `pear@3.0.0` devDependency (installed during the #14 debug) shadowed the global pear 2.0.1. Removed it; `npm run dev` uses the global pear again (main process boots; the desktop GUI remains blocked by the global Pear runtime issue, #14).
+
+**Verification:** `npm test` green in both repos; renderer bundles. Fix needs on-device confirmation (phone will be brought to 0.2.9 and a follow-up release used to verify the in-app update).
+
+---
+
 ## 2026-08-05 — #10 desktop 3D globe (opt-in)
 
 **Status:** re-imported the 3D globe into the desktop build (code complete).
