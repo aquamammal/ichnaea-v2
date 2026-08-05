@@ -4,6 +4,21 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+---
+
+## 2026-08-05 — Broadcast UX: post-add nudge + no-GPS manual prompt (0.2.11)
+
+**Status:** shipped on both platforms.
+
+**What changed**
+- **Post-add broadcast nudge:** after adding a contact, a "Broadcast now?" modal appears (Later / Broadcast now) so the first check-in isn't left to the default 1-day schedule. Broadcast now routes through the normal check-in path.
+- **No-GPS manual prompt:** tapping **Broadcast coordinates** with no GPS fix now opens a "No GPS fix" modal to enter lat/lng and broadcast manually (instead of silently giving up). The manual-override path still short-circuits GPS when enabled.
+
+**Planned (future release) — city search database:**
+- Ship a bundled database of the **top ~200 most popular cities** (name → lat/lng) with a search field in the manual-coordinates flow, so a user without GPS can pick "Tokyo, Japan" instead of typing coordinates. Zero-telemetry: bundled locally (like `src/assets/world.js`), no network lookup. Not started; tracked here for a later release.
+
+---
+
 ## 2026-08-05 — v0.2.9 release (in-app "Update now" fix + `npm run dev` fix)
 
 **Status:** bumped both repos to **0.2.9** (Android `versionCode 11`). Android APK shipped to `dist/ichnaea-android-v0.2.9-debug.apk` (SHA `fb9932ac…72c2`) + GitHub Release `v0.2.9`.
