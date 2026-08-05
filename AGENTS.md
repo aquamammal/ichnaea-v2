@@ -22,8 +22,9 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 │  ├─ main.js            # renderer: thin pipe client + map/UI controller + geolocation
 │  ├─ staleness.js       # active/stale/offline classification + humanizing (renderer)
 │  ├─ map-styles.js      # user-selectable map-style registry + persistence (renderer)
-│  ├─ renderer.js        # map-style dispatcher -> builds the 2D renderer (renderer)
+│  ├─ renderer.js        # map-style dispatcher -> 2D map or 3D WebGL globe (renderer)
 │  ├─ map2d.js           # 2D canvas map: equirectangular / self-centered / Dymaxion (renderer)
+│  ├─ globe-renderer.js  # 3D WebGL globe: wireframe / texture / colored-countries (renderer)
 │  ├─ country-colors.js  # shared per-country color palette (colored-countries mode)
 │  ├─ scanner.js         # camera QR scanner (getUserMedia + jsqr, on-device)
 │  ├─ updates.js         # manual GitHub Release version check (Settings → Check for updates)
@@ -93,7 +94,7 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 - Location payloads are **plaintext** in the MVP (see `SECURITY.md`); `encrypt`/`decrypt` in `src/crypto.js` are stubs marking the X25519 upgrade point.
 - **Rendering must stay zero-telemetry.** No OSM/tile servers, no CDN, no third-party requests for rendering — the world outline (`src/assets/world.js`) is bundled locally, and all three projections (equirectangular, self-centered, Dymaxion) are pure `d3-geo` math over that data. Do not add remote rendering assets.
 - **The only outbound request is the manual update check.** `src/updates.js` fetches the app's GitHub `releases/latest` **only when the user taps Settings → Check for updates**. Never check on boot or in the background — an automatic check would violate zero-telemetry. Keep `APP_VERSION` in `updates.js` in sync with `package.json` on every version bump.
-- **The desktop build is maps-only.** There is no 3D WebGL globe (`globe-renderer.js` was removed). `src/renderer.js` is the map-style dispatcher and always builds a 2D canvas map from `src/map2d.js`. If you ever want to add a globe back as an opt-in, re-import `globe-renderer.js` from the Android repo and restore a WebGL fallback path in `src/renderer.js`.
+- **The desktop build defaults to 2D maps, with the 3D globe opt-in.** `src/renderer.js` is the map-style dispatcher: globe styles (`globe-wireframe`/`globe-texture`/`globe-countries`) build `src/globe-renderer.js` (3D WebGL via `globe.gl` + `three`), falling back to the 2D canvas map from `src/map2d.js` when WebGL is unavailable or the globe fails. The default style stays the 2D Map (`DEFAULT_ID = 'map'` in `map-styles.js`). Both renderers share the same public interface, so `src/main.js` never knows which it got.
 - `pear run` does not pipe renderer console to stdout. Keep the on-page fatal-error overlay in `src/main.js` so load errors are visible; main-process modules can be smoke-tested in plain Node with a stub pipe (see PROGRESS.md).
 - **Environmental:** in some environments `pear run -d .` stops in Pear's own `pear-electron` boot bundle with `SyntaxError: Unexpected token ':'` before app code loads (the sibling v1 project fails identically). This is a Pear runtime/CLI issue, not an app bug.
 

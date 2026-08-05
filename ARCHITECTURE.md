@@ -62,7 +62,7 @@ The app is split across the two Pear processes, bridged by the **Pear pipe** (ne
 
 ## Rendering: user-selectable 2D maps
 
-The desktop build ships **2D canvas maps only** (no 3D WebGL globe). `src/renderer.js` reads the user's chosen style from `src/map-styles.js` and builds the matching renderer from `src/map2d.js`. The renderer exposes a fixed interface (`setSelf`, `upsertContactPin`, `removeContactPin`, `hasPin`, `setPinScale`, `setGrayscale`, `setColored`, `centerOn`, `resize`, `globe`, `webgl`), so `src/main.js` needs no changes and the rest of the app (contacts, settings, P2P) works regardless of style. `centerOn(lat,lng)` pans the map so a clicked contact is centered.
+The desktop build ships **2D canvas maps by default, with the 3D WebGL globe opt-in** (`#10`). `src/renderer.js` reads the user's chosen style from `src/map-styles.js` and builds either `src/globe-renderer.js` (globe styles, via `globe.gl` + `three`) or `src/map2d.js` (map styles), falling back to the 2D Map if WebGL is unavailable or the globe fails to build. Both renderers expose the same fixed interface (`setSelf`, `upsertContactPin`, `removeContactPin`, `hasPin`, `setPinScale`, `setGrayscale`, `setColored`, `setArcs`, `centerOn`, `resize`, `globe`, `webgl`), so `src/main.js` needs no changes and the rest of the app (contacts, settings, P2P) works regardless of style. `centerOn(lat,lng)` pans the map/globe so a clicked contact is centered. The globe derives its surface from the same bundled Natural Earth data + Blue Marble texture (zero telemetry).
 
 Three styles are available (picked in **Settings → Map style**; persisted in localStorage, applied on reload):
 

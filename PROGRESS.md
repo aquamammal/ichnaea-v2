@@ -4,6 +4,25 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — #10 desktop 3D globe (opt-in)
+
+**Status:** re-imported the 3D globe into the desktop build (code complete).
+
+**What changed**
+- Re-imported `src/globe-renderer.js` from the Android repo (wireframe / texture / colored-countries; same bundled Natural Earth + Blue Marble assets — zero telemetry).
+- `src/renderer.js` is again the full dispatcher: globe styles build the 3D WebGL globe with a transparent fallback to the 2D Map when WebGL is unavailable or the globe fails.
+- `src/map-styles.js` now lists the three globe styles; the desktop **default stays the 2D Map** (`DEFAULT_ID = 'map'`).
+- Added `three@^0.185.1` (matches the version hoisted in the Android repo; earlier `three@0.160` lacks the `three/webgpu`/`three/tsl` exports that `three-globe` imports).
+
+**Verification**
+- Desktop renderer bundles cleanly with the globe (esbuild) — code complete.
+- `npm test` green (492 asserts). **GUI not live-verified**: the desktop window still can't boot on this box due to the global Pear runtime's Electron bundle loader (#14); the globe is ready to test once the desktop runtime works.
+
+**Known limits / next steps**
+- With #10, the roadmap (#1-#15) is fully implemented. Remaining: live desktop GUI verification once the global Pear runtime issue is resolved (migration to `pear-runtime` or a root install of a fixed Pear).
+
+---
+
 ## 2026-08-05 — v0.2.8 release (quiet-contact notifications)
 
 **Status:** bumped both repos to **0.2.8** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 10`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.8-debug.apk` (SHA `0c4e3e7a…a1ed`) and a GitHub Release `v0.2.8` published, so the in-app updater can update the phone 0.2.7 → 0.2.8. Contents: local-only quiet-contact notifications (#9).

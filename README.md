@@ -29,6 +29,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Offline check-in queue:** if a check-in fires while no contact is connected, a status line shows **"N check-ins queued (offline)"**; once a contact connects, the check-ins sync via replication and the line briefly shows **"Synced N offline check-ins"**.
 - **Quiet-contact notifications:** when a contact goes stale/offline, a **local-only** notification says "X went quiet — last check-in …" (no coordinates, nothing sent). Toggle it in **Settings → Notify when a contact goes quiet** (default on).
 - **Rename contacts:** long-press a contact (or right-click on desktop) to rename them — local-only, never sent to the peer.
+- **3D globe (opt-in):** Settings → Map style adds **Globe — Wireframe / Full Color / Colored Countries**. The 3D WebGL globe renders from the same bundled Earth data (zero telemetry) and falls back to the 2D Map if WebGL is unavailable.
 - **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
 - **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.
 - **Update check:** **Settings → Check for updates** fetches the latest **GitHub Release** for this repo and reports if a newer build exists. Manual and opt-in — no network on boot or in the background (preserves zero-telemetry).
