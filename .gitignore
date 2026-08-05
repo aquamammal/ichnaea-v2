@@ -14,3 +14,7 @@ Thumbs.db
 # Logs
 npm-debug.log*
 *.log
+
+# Local AI handoff/context docs (not part of the repo)
+handoff.md
+context.md
