@@ -23,6 +23,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Location precision dial:** **Settings → Location precision** snaps your broadcast coordinates onto a **~5 / 10 / 25 / 50 km grid** (Off = exact position). Applied to both scheduled and manual check-ins, so you can share only an approximate area.
 - **Log-key rotation (forward secrecy):** your symmetric log key is rotated on every log rotation and re-shared with contacts over the handshake; a short windowed history is kept then dropped, so a device compromise exposes at most recent history.
 - **Encrypt local data:** **Settings → Encrypt local data** protects `identity.json`, `contacts.json`, and `settings.json` with a passphrase. On launch the app asks you to unlock. A forgotten passphrase means unrecoverable data.
+- **Reliability:** contact discovery runs in parallel at startup; the peer-status line shows **Connecting to contacts…** while discovery is in progress; and both platforms auto-reconnect with exponential backoff (capped at 30s) if the connection drops. Optionally point the DHT at known bootstrap nodes via the `ICHNAEA_BOOTSTRAP` env var.
 - **Rename contacts:** long-press a contact (or right-click on desktop) to rename them — local-only, never sent to the peer.
 - **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
 - **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.

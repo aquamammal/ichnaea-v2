@@ -4,6 +4,31 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.4 release (reliability)
+
+**Status:** bumped both repos to **0.2.4** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 6`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.4-debug.apk` (SHA `80cd1baa…3a45`) and a GitHub Release `v0.2.4` published, so the in-app updater can update the phone 0.2.3 → 0.2.4. Contents: parallel DHT discovery + connecting-state (#5) and exponential-backoff auto-reconnect (#6).
+
+**Known limits / next steps**
+- Remaining roadmap: UX (#8-#12), process/polish (#13-#15).
+
+---
+
+## 2026-08-05 — Reliability: DHT discovery (#5) + auto-reconnect (#6)
+
+**Status:** shipped the reliability pair on both platforms.
+
+**What changed**
+- **#5 DHT discovery reliability:** contact-topic joins at boot are now **parallel** (`Promise.all` — no longer serialized); `ICHNAEA_BOOTSTRAP` env lets you point Hyperswarm at known/faster bootstrap nodes (default unchanged); first-verified-connection latency is logged (`[dht] first verified connection in <ms>ms`) for profiling; the renderer's peer-status line now surfaces the **connecting** state.
+- **#6 Auto-reconnect hardening:** new pure `src/backoff.js` (exponential backoff, cap 30s, reset on success). Android WebSocket client uses it (was fixed 2s). Desktop main `index.js` delays `Pear.exit()` by 30s on pipe close so a transient renderer restart doesn't kill the P2P stack; the desktop renderer disables pear-pipe auto-exit and reloads itself with backoff. (Desktop GUI can't be live-verified on this box — Pear runtime issue; covered by the shared backoff unit tests + code review.)
+
+**Verification**
+- `npm test` — **59/59 pass (395 asserts)** desktop (incl. new `test/backoff.test.js`); Android suite green (367 asserts). Both renderers bundle cleanly.
+
+**Known limits / next steps**
+- Remaining roadmap: UX (#8-#12), process/polish (#13-#15). #7 (two-phone E2E) already verified by the user.
+
+---
+
 ## 2026-08-05 — v0.2.3 release (security pair)
 
 **Status:** bumped both repos to **0.2.3** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 5`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.3-debug.apk` (SHA `8ad6f572…fea0`) and a GitHub Release `v0.2.3` published, so the **in-app updater** (installed with 0.2.2) can update the phone 0.2.2 → 0.2.3 entirely in the app. Contents: log-key rotation (#2) + at-rest passphrase encryption (#4).

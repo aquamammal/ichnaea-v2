@@ -119,15 +119,17 @@ export async function createMainApp ({ pipe }) {
     initSwarm()
     initScheduler()
 
-    // Join all saved contacts.
+    // Join all saved contacts in PARALLEL so slow discovery on one topic never
+    // blocks the others (#5: don't serialize boot joins).
     const list = await contacts.listContacts()
-    for (const c of list) await state.swarm.joinContact(c)
+    await Promise.all(list.map((c) => state.swarm.joinContact(c)))
     state.locked = false
     state.atRest.unlocked = true
   }
 
   // --- swarm -----------------------------------------------------------------
   function initSwarm () {
+    const bootstrap = parseBootstrap(process.env.ICHNAEA_BOOTSTRAP)
     state.swarm = createSwarmManager({
       identity: state.identity,
       getIntervalMs: () => state.settings.intervalMs,
@@ -135,8 +137,12 @@ export async function createMainApp ({ pipe }) {
       getLocalCore: () => state.localCore,
       getLogKey: () => state.identity.logKey,
       getEncKeyPair: () => state.identity.logEnc,
+      bootstrap,
+      onFirstConnection: (ms, contactId) => {
+        console.error(`[dht] first verified connection in ${ms}ms (${contactId.slice(0, 8)})`)
+      },
       onUpdate: (s) => {
-        send({ type: 'peers', verified: s.verified, connections: s.connections })
+        send({ type: 'peers', verified: s.verified, connections: s.connections, connecting: s.connecting, peers: s.peers })
       },
       onPeerVerified: async (contactId, conn, meta) => {
         if (meta.intervalMs) await contacts.setContactInterval(contactId, meta.intervalMs)
@@ -246,6 +252,14 @@ export async function createMainApp ({ pipe }) {
     const keys = [state.identity.logKey]
     for (const h of state.identity.logKeyHistory || []) keys.push(h.key)
     return keys
+  }
+
+  // Parse ICHNAEA_BOOTSTRAP as a comma-separated list of "host:port" DHT
+  // bootstrap nodes (optional; used to point at known/faster bootstrap nodes).
+  function parseBootstrap (raw) {
+    if (!raw || typeof raw !== 'string') return null
+    const nodes = raw.split(',').map((s) => s.trim()).filter(Boolean)
+    return nodes.length ? nodes : null
   }
 
   // Rotate to a fresh local core generation. When `rotateLogKey` is set (on the

@@ -124,6 +124,14 @@
 - [ ] **Remove encryption:** Settings → **Remove local encryption** → enter the current passphrase → status returns to **Off** and the stores are plaintext again.
 - [ ] **No side effects:** encryption/rotation do not affect P2P connectivity, map rendering, or other settings.
 
+## 5i. Reliability (discovery + reconnect)
+
+- [ ] **Connecting state visible:** with contacts added but peers not yet reachable, the peer-status line shows **Connecting to contacts…** rather than a blank/waiting message.
+- [ ] **Android reconnect with backoff:** kill the main process / lose connectivity → the app shows "reconnecting…" and retries; it recovers automatically when the main process comes back without a manual reload.
+- [ ] **Parallel discovery:** with several contacts, pins appear as each peer is found; a slow/unreachable contact doesn't delay the others.
+- [ ] **Desktop reconnect (pending working desktop runtime):** kill the main process → renderer shows "Reconnecting…" and re-boots when the main returns; closing the app still quits it.
+- [ ] **Bootstrap override:** with `ICHNAEA_BOOTSTRAP` set to known nodes, discovery still connects (and uses the given nodes).
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.

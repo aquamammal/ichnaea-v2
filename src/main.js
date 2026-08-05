@@ -6,6 +6,7 @@ import QRCode from 'qrcode/lib/browser.js'
 import { openScanner } from './scanner.js'
 import { checkForUpdates } from './updates.js'
 import { fingerprint } from './fingerprint.js'
+import { createBackoff } from './backoff.js'
 
 // Renderer for Ichnaea v2. This is a THIN PIPE CLIENT: it owns only the globe,
 // the UI, and geolocation. ALL P2P state (identity, contacts, the local
@@ -208,7 +209,7 @@ function handlePush (msg) {
       els.peerDot.classList.toggle('on', msg.verified > 0)
       els.peerStatus.textContent = msg.verified > 0
         ? `${msg.verified} contact${msg.verified === 1 ? '' : 's'} connected`
-        : (state.contacts.length ? 'Waiting for contacts…' : 'No contacts yet')
+        : (msg.connecting > 0 ? 'Connecting to contacts\u2026' : (state.contacts.length ? 'Waiting for contacts\u2026' : 'No contacts yet'))
       break
     }
     case 'contact:update': {
@@ -848,6 +849,20 @@ async function boot () {
       msg = JSON.parse(new TextDecoder().decode(data))
     } catch { return }
     handlePush(msg)
+  })
+
+  // Reconnect (#6): if the main process drops, don't auto-exit — surface
+  // "reconnecting…" and reload the renderer with backoff so it re-attaches to a
+  // still-alive main (which delays its own exit for 30s to allow this).
+  if (typeof pipe.autoexit !== 'undefined') pipe.autoexit = false
+  const reconnect = createBackoff({ base: 1000, max: 30000 })
+  let reconnecting = false
+  pipe.on('close', () => {
+    if (reconnecting) return
+    reconnecting = true
+    setGpsStatus('main process disconnected · reconnecting…')
+    els.peerStatus.textContent = 'Reconnecting…'
+    setTimeout(() => { try { location.reload() } catch { /* not a browser */ } }, reconnect.next())
   })
 
   await loadState()

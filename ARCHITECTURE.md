@@ -110,6 +110,16 @@ Opt-in protection for the JSON stores `identity.json` / `contacts.json` / `setti
 
 ---
 
+## Reliability: discovery tuning + reconnect
+
+**DHT discovery (#5).** Hyperswarm's constructor accepts a `bootstrap` list; `app.js` reads `ICHNAEA_BOOTSTRAP` (comma-separated `host:port`) to point at known/faster bootstrap nodes when set, defaulting to the built-in ones otherwise. Contact-topic joins at boot are now **parallel** (`Promise.all` over `joinContact`) so slow discovery on one topic never blocks the rest. First-verified-connection latency is logged (`[dht] first verified connection in <ms>ms`) for profiling, and the renderer's peer-status line surfaces the **connecting** state (`Connecting to contacts…`) so slow discovery is visible, not silent. Bootstrap nodes can be overridden per the "sharp edges" note without touching defaults.
+
+**Reconnect (#6).** 
+- **Android:** the WebSocket client uses exponential backoff (`src/backoff.js`: 2s → 4s → … capped at 30s) instead of a fixed 2s retry, resetting on a successful connection.
+- **Desktop:** on pipe close the main process (`index.js`) delays `Pear.exit()` by 30s so a transient renderer restart doesn't tear down the P2P stack; the renderer disables pear-pipe auto-exit, surfaces `Reconnecting…`, and reloads itself with backoff (1s → … → 30s) so it re-attaches to the still-alive main. Desktop GUI cannot be live-verified on this box (Pear runtime issue), so that path is covered by the shared backoff unit tests + code review pending a working desktop runtime.
+
+---
+
 ## Why pair-wise swarm topics (not group secrets)
 
 The naive design is a single "group secret" topic that all your contacts join. We rejected it:
