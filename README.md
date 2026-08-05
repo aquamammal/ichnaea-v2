@@ -27,6 +27,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - **Check-in history & NEW badges:** tap a contact in the list to open their **recent check-in history** (times + coordinates). Contacts that checked in since you last opened the app get a **NEW** badge, cleared when you view their history.
 - **Your name at your pin:** tapping your own pin shows your self-chosen name (Settings → Your name) instead of just "You".
 - **Offline check-in queue:** if a check-in fires while no contact is connected, a status line shows **"N check-ins queued (offline)"**; once a contact connects, the check-ins sync via replication and the line briefly shows **"Synced N offline check-ins"**.
+- **Quiet-contact notifications:** when a contact goes stale/offline, a **local-only** notification says "X went quiet — last check-in …" (no coordinates, nothing sent). Toggle it in **Settings → Notify when a contact goes quiet** (default on).
 - **Rename contacts:** long-press a contact (or right-click on desktop) to rename them — local-only, never sent to the peer.
 - **Name yourself:** set **Settings → Your name** — it's sent with every check-in, so contacts see who you are. They can still rename you locally.
 - **Click to center:** tap a contact in the list (or a pin on the map) to center the map on them.

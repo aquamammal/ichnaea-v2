@@ -134,6 +134,12 @@ When a check-in fires (`doCheckin`) while no contact is connected (`swarm.state(
 
 ---
 
+## Quiet-contact notifications (#9)
+
+Local-only alerts when a contact goes stale/offline. The renderer's 30s staleness sweep tracks each contact's last status (`quietNotified` map) and, on a transition **into** `stale` or `offline` (never on first sight), calls `notifyQuiet(contact)`. The payload is just "X went quiet — last check-in …" — **no coordinates**. On Android this posts via the native `IchnaeaNotifyPlugin` (`POST_NOTIFICATIONS`, requested once at boot; a notification channel is created for API 26+). On desktop/browser it uses the Web `Notification` API when available. A Settings toggle (**Notify when a contact goes quiet**, default on, stored in `localStorage`) disables it. Background reliability depends on the process/WebView staying alive; the Android foreground `NodeService` keeps the main process up.
+
+---
+
 ## Why pair-wise swarm topics (not group secrets)
 
 The naive design is a single "group secret" topic that all your contacts join. We rejected it:

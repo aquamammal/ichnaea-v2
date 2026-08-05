@@ -4,6 +4,32 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.8 release (quiet-contact notifications)
+
+**Status:** bumped both repos to **0.2.8** (package.json, `updates.js APP_VERSION`, beacon header, version tag; Android `versionCode 10`). Android APK rebuilt + shipped to `dist/ichnaea-android-v0.2.8-debug.apk` (SHA `0c4e3e7a…a1ed`) and a GitHub Release `v0.2.8` published, so the in-app updater can update the phone 0.2.7 → 0.2.8. Contents: local-only quiet-contact notifications (#9).
+
+**Known limits / next steps**
+- #10 (desktop globe) remains blocked by the global Pear runtime's Electron bundle loader (documented under #14). Everything else on the roadmap (#1-#9, #11-#15) is done.
+
+---
+
+## 2026-08-05 — #9 quiet-contact notifications
+
+**Status:** shipped on both platforms.
+
+**What changed**
+- Renderer staleness sweep now tracks each contact's last status and fires a **local-only** notification on a transition into stale/offline ("X went quiet — last check-in …", no coordinates, never on first sight). Settings toggle **"Notify when a contact goes quiet"** (default on, `localStorage`).
+- Android: native `IchnaeaNotifyPlugin` posts the notification (`POST_NOTIFICATIONS` runtime-requested once at boot; channel created on API 26+). Desktop/browser falls back to the Web Notification API.
+- Docs: SECURITY.md notifications-privacy note, README/TESTING/ARCHITECTURE, Android README regeneration caveats.
+
+**Verification**
+- `npm test` green in both repos; renderers bundle; APK builds (plugin compiles). Notifications need a device to fully exercise (manual TESTING.md checklist).
+
+**Known limits / next steps**
+- #10 (desktop globe) remains blocked by the global Pear runtime's Electron bundle loader (documented under #14).
+
+---
+
 ## 2026-08-05 — #15 version auto-sync test
 
 **Status:** shipped on both platforms (test-only).

@@ -146,6 +146,14 @@
 - [ ] **No data loss:** while offline, check-ins are still stored locally; after reconnect the contact sees them via replication.
 - [ ] **Restart:** queue count persists across a restart (pending.json) and clears once a peer connects.
 
+## 5l. Quiet-contact notifications
+
+- [ ] **Notification on transition:** with a contact whose interval makes them go stale/offline, wait for the sweep to cross the threshold → a local notification appears: "X went quiet — last check-in …" (no coordinates).
+- [ ] **No boot spam:** booting with an already-quiet contact does NOT notify.
+- [ ] **Toggle:** Settings → "Notify when a contact goes quiet" off → no notifications on the next transition; on → they return.
+- [ ] **Android permission:** the first launch requests notification permission (Android 13+); granting enables the alerts.
+- [ ] **Local-only:** notifications carry no location; nothing is transmitted.
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.
