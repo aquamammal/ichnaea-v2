@@ -1,6 +1,6 @@
 # Ichnaea v2 — Periodic Check-In Beacon
 
-A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch**. You broadcast your GPS position at a low, user-defined frequency to a small set of explicitly-approved contacts — and only to them. Contacts render as pins on a world map (2D canvas by default, optional 3D globe).
+A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch**. You broadcast your GPS position at a low, user-defined frequency to a small set of explicitly-approved contacts — and only to them. Contacts render as pins on a **2D map** with a user-selectable projection.
 
 **Zero telemetry. No central servers. No group secrets.**
 
@@ -15,7 +15,9 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - Optional **manual location override**: enter coordinates by hand to check in without GPS, or to make scheduled check-ins use a fixed location.
 - Replicates each contact's **Hypercore** append-only log and renders their last check-in as a pin on the map.
 - Colors pins by freshness: **green = active**, **gray = stale**, and removes pins that go silent too long.
-- **2D canvas map by default:** contacts render as pins on a 2D world map drawn on a plain canvas — no WebGL required, so it works on every machine. A 3D WebGL globe is available as an opt-in (open the window with `?globe=3d`, or set `localStorage 'globe' = '3d'`); if WebGL context creation fails there, it falls back to 2D automatically. All rendering assets (Natural Earth world outline, earth texture) are **bundled locally** — no map tiles, no CDN, zero third-party requests.
+- **User-selectable 2D maps:** pick a projection in **Settings → Map style** — **Map** (equirectangular, Taiwan-centered), **Map — Centered on Me** (re-centers on your check-in), or **Map — Dymaxion** (Fuller's Airocean projection). All rendering uses the bundled Natural Earth world outline — **no map tiles, no CDN, zero third-party requests**.
+- **Colored countries toggle:** a live button on the Check-In Beacon tile (`Colored countries` On/Off) fills each country with its own hue in every map projection. Persisted, applied at boot, toggles in place — no reload needed.
+- **QR code sharing:** the `QR` button next to your public key renders it as a scannable QR code (local `qrcode` lib — no network), plus the key text for manual copy. A friend scans it into Ichnaea's "Add Contact" to pair.
 
 ---
 
@@ -124,21 +126,17 @@ npm test
 ### Windows
 - **Installers:** use the `.msi` from nodejs.org. In PowerShell, `npm install -g pear` and `npm run dev` work as written above.
 - **No-spaces path:** critical — see Step 3.
-- **Globe:** WebGL usually works on Windows, so the **3D globe** renders. If it doesn't, the app automatically falls back to the 2D map.
+- **Maps:** the app uses **2D canvas maps** (user-selectable projection) — no WebGL needed, so it works on every machine.
 - **Firewall:** the first time you run it, Windows may ask to allow network access (needed for peer-to-peer connections). Allow it.
 
 ### macOS
 - **Installers:** use the `.pkg` from nodejs.org.
-- **Globe:** WebGL works, so the **3D globe** renders.
+- **Maps:** the app uses **2D canvas maps** (user-selectable projection) — no WebGL needed.
 - **Privacy/Location:** macOS may prompt for location permission the first time GPS is used — allow it if you want real check-ins.
 
 ### Linux
 - **Node:** use the NodeSource instructions above, or `nvm`.
-- **Globe:** some Linux GPU/driver combos block WebGL in the Pear window. If the 3D globe fails, the app automatically uses the **2D canvas map** (works everywhere, no WebGL needed).
-- **Software rendering (if the globe is blank):** run with software rendering:
-  ```bash
-  LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe npm run dev
-  ```
+- **Maps:** the app uses **2D canvas maps** (user-selectable projection) — no WebGL or GPU needed, so it works on every machine.
 - **Location:** `navigator.geolocation` may report unavailable on some desktop Linux setups; use **Settings → Manual location** to check in without GPS (see below).
 
 ---
@@ -201,7 +199,7 @@ Because everyone can pick a different interval, freshness is judged **relative t
 
 - **Active (green)** — last check-in is within `2×` their interval.
 - **Stale (gray)** — between `2×` and `4×` their interval.
-- **Removed** — no update for `4×` their interval (assumed offline; pin is taken off the globe).
+- **Removed** — no update for `4×` their interval (assumed offline; pin is taken off the map).
 
 ---
 
@@ -233,14 +231,15 @@ Read `ARCHITECTURE.md` for the data flow and `SECURITY.md` for an honest threat 
 ```
 ├─ index.js              # Pear main process: bridge + runtime + pipe server (owns the P2P stack)
 ├─ src/
-│  ├─ index.html         # globe (100vh) + control panels + modals + dev panel (renderer)
-│  ├─ main.js            # renderer: thin pipe client + globe/UI controller + geolocation
+│  ├─ index.html         # map (100vh) + control panels + modals + dev panel (renderer)
+│  ├─ main.js            # renderer: thin pipe client + map/UI controller + geolocation
 │  ├─ staleness.js       # active/stale/offline classification + time humanizing (renderer)
-│  ├─ globe-renderer.js  # renderer factory: 2D canvas map (default) or 3D WebGL globe (opt-in)
-│  ├─ map2d.js           # 2D canvas map: equirectangular projection, pins, arcs (renderer)
+│  ├─ map-styles.js      # user-selectable map-style registry + persistence (renderer)
+│  ├─ renderer.js        # map-style dispatcher -> builds the 2D renderer (renderer)
+│  ├─ map2d.js           # 2D canvas map: equirectangular / self-centered / Dymaxion projections
+│  ├─ country-colors.js  # shared per-country color palette (colored-countries mode)
 │  ├─ assets/            # bundled rendering assets (zero telemetry: no tiles, no CDN)
-│  │  ├─ ne_110m_admin_0_countries.geojson  # Natural Earth 110m world outline (public domain)
-│  │  └─ earth-blue-marble.jpg              # 3D globe surface texture (from three-globe)
+│  │  └─ ne_110m_admin_0_countries.geojson  # Natural Earth 110m world outline (public domain)
 │  ├─ crypto.js          # keygen, base64 keys, pair-topic derivation, X25519 log-key exchange + per-block AEAD (shared, pure)
 │  ├─ swarm.js           # pair-wise Hyperswarm topics, handshake, connections (main process)
 │  ├─ main/              # main-process-only modules (no browser APIs)
@@ -269,7 +268,8 @@ Read `ARCHITECTURE.md` for the data flow and `SECURITY.md` for an honest threat 
 > **Note on dependencies:** Hypercore is pinned to **v10**; v10 accepts a directory path
 > for filesystem RAF storage (`new Hypercore(dir, { keyPair })`). Contact cores are kept in
 > RAM. The renderer never imports hyperswarm/hypercore/random-access — only `pear-pipe`,
-> `staleness.js`, and `globe-renderer.js`.
+> `staleness.js`, and the map renderer modules. `d3-geo` + `d3-geo-polygon` power the map
+> projections; `qrcode` generates the public-key QR code locally.
 
 ## License
 

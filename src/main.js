@@ -1,6 +1,8 @@
 import getPipe from 'pear-pipe'
 import { classify, humanize, formatLocal, STATUS } from './staleness.js'
-import { createGlobeRenderer } from './globe-renderer.js'
+import { createRenderer } from './renderer.js'
+import { MAP_STYLES, getMapStyleId, setMapStyleId, getColored, setColored } from './map-styles.js'
+import QRCode from 'qrcode/lib/browser.js'
 
 // Renderer for Ichnaea v2. This is a THIN PIPE CLIENT: it owns only the globe,
 // the UI, and geolocation. ALL P2P state (identity, contacts, the local
@@ -14,9 +16,11 @@ const $ = (id) => document.getElementById(id)
 const els = {
   peerDot: $('peer-dot'), peerStatus: $('peer-status'), gpsStatus: $('gps-status'),
   myPubkey: $('my-pubkey'), contactsList: $('contacts-list'),
+  btnQr: $('btn-qr'), modalQr: $('modal-qr'), qrCanvas: $('qr-canvas'), qrKey: $('qr-key'), qrClose: $('qr-close'),
+  colorToggle: $('btn-color-countries'), colorVal: $('color-countries-val'),
   panelTopleft: $('panel-topleft'), panelContacts: $('panel-contacts'),
   modalAdd: $('modal-add'), addNick: $('add-nickname'), addPub: $('add-pubkey'), addErr: $('add-error'),
-  modalSet: $('modal-settings'), setInterval: $('set-interval'), setErr: $('set-error'),
+  modalSet: $('modal-settings'), setInterval: $('set-interval'), setErr: $('set-error'), setMapStyle: $('set-mapstyle'),
   manualLat: $('manual-lat'), manualLng: $('manual-lng'), manualEnabled: $('manual-enabled'),
   pinScale: $('set-pinsize'), pinsizeVal: $('pinsize-val'),
   pinOverlay: $('pin-overlay'), pinName: $('pin-name'), pinTime: $('pin-time'), pinAgo: $('pin-ago'), pinStatus: $('pin-status'), pinCoords: $('pin-coords'),
@@ -48,12 +52,27 @@ const state = {
   globe: null,
   intervalMs: DEFAULT_INTERVAL_MS,
   contacts: [], // cached list from main
-  manual: { enabled: false, lat: null, lng: null }
+  manual: { enabled: false, lat: null, lng: null },
+  pinScale: 1,
+  colored: getColored()
 }
 
 // --- globe (rendered FIRST so a slow/absent pipe never blanks the page) -------
 function initGlobe () {
-  state.globe = createGlobeRenderer($('globe'), { onPinClick: showPinOverlay })
+  state.globe = createRenderer($('globe'), { onPinClick: showPinOverlay, colored: state.colored })
+}
+
+function syncColorToggle () {
+  if (!els.colorToggle || !els.colorVal) return
+  els.colorVal.textContent = state.colored ? 'On' : 'Off'
+}
+
+function onColorToggle () {
+  state.colored = !state.colored
+  setColored(state.colored)
+  syncColorToggle()
+  if (state.globe && typeof state.globe.setColored === 'function') state.globe.setColored(state.colored)
+  toast('Colored countries: ' + (state.colored ? 'on' : 'off'))
 }
 
 function showPinOverlay (data) {
@@ -271,6 +290,15 @@ function initUI () {
   }
   els.setInterval.value = String(state.intervalMs)
 
+  const currentStyle = getMapStyleId()
+  for (const s of MAP_STYLES) {
+    const o = document.createElement('option')
+    o.value = s.id
+    o.textContent = s.name
+    if (s.id === currentStyle) o.selected = true
+    els.setMapStyle.appendChild(o)
+  }
+
   $('btn-add-contact').addEventListener('click', () => openModal(els.modalAdd))
   $('btn-settings').addEventListener('click', () => {
     els.setInterval.value = String(state.intervalMs)
@@ -317,39 +345,69 @@ function initUI () {
     } catch { toast('Copy failed — select and copy manually') }
   })
 
-  els.versionTag.addEventListener('dblclick', () => { syncGlobeToggleLabel(); els.devPanel.classList.toggle('open') })
+  if (els.colorToggle) {
+    els.colorToggle.addEventListener('click', onColorToggle)
+    syncColorToggle()
+  }
+  if (els.btnQr) {
+    els.btnQr.addEventListener('click', openQrModal)
+    if (els.qrClose) els.qrClose.addEventListener('click', () => closeModal(els.modalQr))
+    if (els.qrKey) {
+      els.qrKey.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(els.qrKey.textContent)
+          toast('Public key copied')
+        } catch { toast('Copy failed — select and copy manually') }
+      })
+    }
+  }
+
+  els.versionTag.addEventListener('dblclick', () => { syncStyleToggleLabel(); els.devPanel.classList.toggle('open') })
   $('btn-dev-close').addEventListener('click', () => els.devPanel.classList.remove('open'))
   $('btn-force-200').addEventListener('click', onForce200)
-  $('btn-toggle-globe').addEventListener('click', onToggleGlobe)
+  $('btn-toggle-globe').addEventListener('click', onCycleMapStyle)
 }
 
-// Current renderer mode: '3d' if the 3D globe is active, else '2d'.
-function currentGlobeMode () {
-  try {
-    const q = (window.location && window.location.search) || ''
-    if (/[?&]globe=3d/.test(q)) return '3d'
-    if (/[?&]globe=2d/.test(q)) return '2d'
-    const stored = window.localStorage && window.localStorage.getItem('globe')
-    if (stored === '3d') return '3d'
-  } catch { /* ignore */ }
-  return '2d'
-}
-
-function syncGlobeToggleLabel () {
+function syncStyleToggleLabel () {
   const btn = $('btn-toggle-globe')
-  if (btn) btn.textContent = currentGlobeMode() === '3d' ? 'Use 2D map' : 'Try 3D globe'
+  if (!btn) return
+  const cur = getMapStyleId()
+  const i = MAP_STYLES.findIndex((s) => s.id === cur)
+  const next = MAP_STYLES[(i + 1) % MAP_STYLES.length]
+  btn.textContent = 'Next map: ' + next.name
 }
 
-function onToggleGlobe () {
-  const next = currentGlobeMode() === '3d' ? '2d' : '3d'
-  try { window.localStorage.setItem('globe', next) } catch { /* ignore */ }
-  toast(next === '3d' ? 'Reloading with 3D globe…' : 'Reloading with 2D map…')
-  // Reload so the renderer factory re-selects on boot.
+function onCycleMapStyle () {
+  const cur = getMapStyleId()
+  const i = MAP_STYLES.findIndex((s) => s.id === cur)
+  const next = MAP_STYLES[(i + 1) % MAP_STYLES.length]
+  setMapStyleId(next.id)
+  toast('Map: ' + next.name + '…')
   setTimeout(() => window.location.reload(), 300)
 }
 
 function openModal (m) { m.classList.add('open') }
 function closeModal (m) { m.classList.remove('open'); const e = m.querySelector('.form-error'); if (e) e.textContent = '' }
+
+// QR share of your public key — scannable by a friend's phone to add you as a
+// contact. Generated locally (qrcode lib, bundled — no network).
+async function openQrModal () {
+  const key = els.myPubkey.textContent || ''
+  if (!key || key === '…' || key === '') {
+    toast('No public key yet')
+    return
+  }
+  try {
+    els.qrKey.textContent = key
+    if (els.qrCanvas && els.qrCanvas.getContext) {
+      const size = Math.min(els.qrCanvas.clientWidth || 260, 260)
+      await QRCode.toCanvas(els.qrCanvas, key, { margin: 2, width: size, errorCorrectionLevel: 'M' })
+    }
+    openModal(els.modalQr)
+  } catch (err) {
+    toast('QR failed: ' + String(err && err.message || err))
+  }
+}
 
 function syncManualUI () {
   const m = state.manual || {}
@@ -389,6 +447,11 @@ async function onSaveSettings () {
     state.intervalMs = res.intervalMs
     closeModal(els.modalSet)
     toast('Settings saved')
+    // Map style change needs a reload (the renderer is built once at boot).
+    if (els.setMapStyle.value && els.setMapStyle.value !== getMapStyleId()) {
+      setMapStyleId(els.setMapStyle.value)
+      setTimeout(() => window.location.reload(), 400)
+    }
   } catch (err) {
     els.setErr.textContent = String(err.message || err)
   }

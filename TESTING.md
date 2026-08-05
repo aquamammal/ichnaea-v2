@@ -7,7 +7,7 @@
 
 ## 0. First launch / identity
 
-- [ ] App launches to a globe that fills the window (100vh) with no console errors.
+- [ ] App launches to a map that fills the window (100vh) with no console errors.
 - [ ] A Base64 public key is shown in the top-left panel.
 - [ ] Reload the app → the **same** public key is shown (identity persisted in IndexedDB, not regenerated).
 
@@ -36,7 +36,7 @@
 
 ## 4. Broadcasting (GPS & Backgrounding)
 
-- [ ] **GPS Granted:** When the timer fires, a `{lat,lng,timestamp}` entry is appended to A's local Hypercore and A's **blue** self-pin appears/updates on the globe.
+- [ ] **GPS Granted:** When the timer fires, a `{lat,lng,timestamp}` entry is appended to A's local Hypercore and A's **blue** self-pin appears/updates on the map.
 - [ ] **GPS Denied (First time):** Deny location permission → app shows "location unavailable", retries once after ~1 minute, and does **not** append a null/empty entry.
 - [ ] **GPS Denied (Reload):** Deny GPS, close the tab, reopen it. The app **must** ask for permission again (or show a prominent "Enable Location" button). It should not remain permanently broken.
 - [ ] **Tab Visibility (Backgrounding):** Switch to another browser tab for 5 minutes. Return to the app. The GPS timer should fire immediately (or resume correctly) without spamming multiple missed updates. (Prevents battery drain on mobile).
@@ -53,17 +53,37 @@
 
 ## 5. Receiving & rendering contacts
 
-- [ ] After B checks in, B's pin appears on A's globe. *Allow up to 30 seconds here (network/DHT latency) rather than just 10s.*
+- [ ] After B checks in, B's pin appears on A's map. *Allow up to 30 seconds here (network/DHT latency) rather than just 10s.*
 - [ ] Pin color reflects freshness relative to **B's** interval (not A's).
 - [ ] **Click a pin** → overlay shows B's nickname, the last check-in timestamp formatted to local time, and a humanized "x ago".
 - [ ] **Bottom-right list** shows each contact with a humanized last check-in ("2 hours ago", or "never").
 - [ ] Optional dotted **arcs** render from A's self-pin to each contact pin.
-- [ ] **WebGL blocked (2D fallback):** with WebGL unavailable/blocked, the app shows a **2D canvas world map** (dark landmass, no tiles) with the self pin and contact pins in the same colors; clicking a pin opens the same overlay; drag-pan and wheel-zoom work; contacts/settings/P2P still function.
+
+## 5b. Map styles (Settings → Map style)
+
+- [ ] Three options are present: **Map**, **Map — Centered on Me**, **Map — Dymaxion**; **Map** is selected by default.
+- [ ] **Map (equirectangular):** world drawn in equirectangular projection centered on Taiwan (~121°E). Self pin and contact pins render; drag-pan and wheel-zoom work.
+- [ ] **Map — Centered on Me:** after a check-in (or **Check in now**), the projection re-centers so your self pin is in the middle.
+- [ ] **Map — Dymaxion:** world drawn in Fuller's Dymaxion (Airocean) projection; pan/zoom is smooth (no per-frame re-projection stalls).
+- [ ] **Persistence:** pick a style, Save → app reloads and the chosen style is active. Reload again → the choice is retained.
+- [ ] **Dev panel:** double-tap the version tag → the dev panel's "Next map" button cycles through the three styles and reloads.
+- [ ] Pins/click overlay/contacts/settings/P2P still function in every style.
+
+## 5c. Colored countries toggle + QR share
+
+- [ ] **Toggle:** the Check-In Beacon tile has a **Colored countries** button showing **Off** by default.
+- [ ] Click it → shows **On** and every country fills with its own distinct color; oceans stay dark; borders remain readable. Works in **all three projections** (Map, Centered on Me, Dymaxion).
+- [ ] Click again → back to the plain dark landmass (**Off**).
+- [ ] **Persistence:** toggle On, reload → still On; toggle Off, reload → still Off. No reload is needed to apply it (live `setColored`).
+- [ ] **QR button:** click **QR** next to the public key → a modal shows a scannable QR code of your public key plus the key text.
+- [ ] Scan the QR with another Ichnaea "Add Contact" → it pastes/fills the correct Base64 public key.
+- [ ] Tapping the key text in the QR modal copies it.
+- [ ] QR is generated locally (works offline).
 
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.
-- [ ] **Offline removal:** let `> 4×` B's interval elapse → B's pin is **removed** from the globe (but the contact stays in the list).
+- [ ] **Offline removal:** let `> 4×` B's interval elapse → B's pin is **removed** from the map (but the contact stays in the list).
 - [ ] When B checks in again, B's pin returns as **green**.
 
 ## 7. Connection failure scenarios

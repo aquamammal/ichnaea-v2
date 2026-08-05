@@ -6,7 +6,7 @@ A plain-English tour of how the app works, why it's built this way, and where th
 
 ## The one-sentence version
 
-Each user keeps an **append-only Hypercore log** of their own GPS check-ins; for every contact, the two peers meet in a **unique, private Hyperswarm topic** derived from both of their public keys, replicate each other's logs, and render the latest entry as a pin on a 3D globe.
+Each user keeps an **append-only Hypercore log** of their own GPS check-ins; for every contact, the two peers meet in a **unique, private Hyperswarm topic** derived from both of their public keys, replicate each other's logs, and render the latest entry as a pin on a **2D map** (user-selectable projection).
 
 ---
 
@@ -22,7 +22,7 @@ Each user keeps an **append-only Hypercore log** of their own GPS check-ins; for
 | **Settings** | Broadcast interval, core-rotation generation, manual-GPS override. | `src/main/settings.js` (JSON file `data/settings.json`) |
 | **Main orchestrator** | Boots the P2P stack and routes pipe messages. | `src/main/app.js`, wired by `index.js` |
 | **Staleness** | Decides active / stale / offline from a contact's last timestamp vs. their interval. | `src/staleness.js` (renderer) |
-| **Globe** | Renders self + contact pins, arcs, and the click overlay. Picks **3D (WebGL)** or **2D (canvas)** at runtime. | `src/globe-renderer.js` (factory), `src/map2d.js` (2D fallback) — renderer |
+| **Globe** | Renders self + contact pins, arcs, and the click overlay as a **2D canvas map** with a user-selectable projection. | `src/renderer.js` (dispatcher), `src/map-styles.js`, `src/map2d.js` — renderer |
 | **Renderer client** | Renders the globe/UI, answers GPS requests, sends user actions. | `src/main.js` (renderer, thin pipe client) |
 
 ## Two processes, one pipe
@@ -30,7 +30,7 @@ Each user keeps an **append-only Hypercore log** of their own GPS check-ins; for
 The app is split across the two Pear processes, bridged by the **Pear pipe** (newline-free JSON frames via `pear-pipe`):
 
 - The Pear **main process** (`index.js` + `src/main/*`) owns the **entire P2P stack**: identity, the local Hypercore, Hyperswarm, contact-core replication, the contacts store, and the broadcast scheduler. It persists everything on the **filesystem** under `data/`.
-- The **renderer** (`src/main.js` + `src/staleness.js` + `src/globe-renderer.js`) owns only the **globe, the UI, and geolocation**. It is a thin client: it sends user actions to the main process as JSON pipe messages and re-renders on state pushes.
+- The **renderer** (`src/main.js` + `src/staleness.js` + `src/renderer.js` + `src/map2d.js`) owns only the **map, the UI, and geolocation**. It is a thin client: it sends user actions to the main process as JSON pipe messages and re-renders on state pushes.
 
 **Why the split?** Hyperswarm/Hypercore require Node builtins (`events`, `streamx`, etc.). The Pear renderer's module resolver does **not** provide these to app code, so importing Hyperswarm in the renderer crashed at load with `Cannot find package 'events'` — the module graph (and therefore the globe) never rendered. The main process has full Node/Bare builtins, so the whole P2P stack lives there. This mirrors the proven structure of the sibling v1 project.
 
@@ -60,13 +60,25 @@ The app is split across the two Pear processes, bridged by the **Pear pipe** (ne
 
 ---
 
-## Rendering: 3D globe with a 2D canvas fallback
+## Rendering: user-selectable 2D maps
 
-`src/globe-renderer.js` is a **factory**: it probes for a WebGL context (pre-check + try/catch around `Globe()`) and returns either the **3D globe** (globe.gl/three.js) or, when WebGL is unavailable, the **2D canvas map** (`src/map2d.js`). Both expose the identical interface (`setSelf`, `upsertContactPin`, `removeContactPin`, `hasPin`, `resize`, `globe`, `webgl`), so `src/main.js` needs no changes and the rest of the app (contacts, settings, P2P) keeps working either way.
+The desktop build ships **2D canvas maps only** (no 3D WebGL globe). `src/renderer.js` reads the user's chosen style from `src/map-styles.js` and builds the matching renderer from `src/map2d.js`. The renderer exposes a fixed interface (`setSelf`, `upsertContactPin`, `removeContactPin`, `hasPin`, `setPinScale`, `setGrayscale`, `setColored`, `resize`, `globe`, `webgl`), so `src/main.js` needs no changes and the rest of the app (contacts, settings, P2P) works regardless of style.
 
-The 2D fallback draws a plain **equirectangular projection** (`x = (lng+180)/360·w`, `y = (90−lat)/180·h`) of the bundled **Natural Earth 110m countries** GeoJSON (`src/assets/`, public domain) on a 2D canvas, with the same blue self-pin, green/gray contact pins, dotted arcs, and click hit-testing (~10 px radius). Drag-pan and wheel-zoom are supported.
+Three styles are available (picked in **Settings → Map style**; persisted in localStorage, applied on reload):
 
-**Rendering is fully offline / zero-telemetry.** The world outline and the 3D earth texture (`src/assets/earth-blue-marble.jpg`) are bundled files served from the app's own directory over the Pear localhost bridge. There are **no map-tile servers, no CDN calls, no third-party requests** for rendering — OSM-style tiles were rejected precisely because every tile fetch is a telemetry leak (a remote server learns when and where you look).
+- **Map** — equirectangular centered on Taiwan (~121°E, ~23.5°N); the default.
+- **Map — Centered on Me** — equirectangular re-centered on your current check-in (`rotate([-lng, -lat])`), so the map pivots on your location whenever you check in.
+- **Map — Dymaxion** — Buckminster Fuller's Airocean ("Dymaxion") projection via `d3-geo-polygon`'s `geoAirocean`.
+
+All projections come from `d3-geo`/`d3-geo-polygon`. The world outline is the bundled **Natural Earth 110m countries** GeoJSON (`src/assets/world.js`, public domain) drawn on a 2D canvas, with the same blue self-pin, green/gray contact pins, dotted arcs, and click hit-testing (~10 px radius). Drag-pan, pinch, and wheel-zoom are supported via `projection.invert` (the geographic point under the cursor stays fixed while zooming).
+
+**Colored countries toggle.** A live button on the Check-In Beacon tile fills each country with its own hue in every projection. The palette lives in `src/country-colors.js` (hue hashed from the feature index — stable across sessions), the flag persists under the `coloredCountries` localStorage key, and the renderer's `setColored()` swaps the fill per frame without a rebuild or reload. On the Android build the same toggle colors the 3D globe too.
+
+**QR code sharing.** The `QR` button next to your public key renders it as a scannable QR code using the bundled `qrcode` library (`QRCode.toCanvas` — fully local, no network), with the key text underneath for manual copy. A friend scans it into Ichnaea's "Add Contact" to pair.
+
+**Performance:** the landmass + graticule are rendered once per fit as resolution-independent `Path2D` objects and then blitted through the zoom/pan affine transform each frame. Colored mode keeps a per-country `Path2D` array from the same fit. This avoids re-projecting all 177 countries every frame (especially expensive for Dymaxion, where each polygon is clipped into many pieces). If a WebView lacks `Path2D`, the renderer degrades to per-frame re-projection.
+
+**Rendering is fully offline / zero-telemetry.** The world outline is a bundled file; all three projections are pure math over that data, and the QR code is generated locally. There are **no map-tile servers, no CDN calls, no third-party requests** for rendering — OSM-style tiles were rejected precisely because every tile fetch is a telemetry leak (a remote server learns when and where you look).
 
 ---
 

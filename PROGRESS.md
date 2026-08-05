@@ -4,6 +4,53 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — Colored-countries toggle + QR public-key sharing
+
+**Status:** added two renderer/UI features, ported identically to the Android build.
+
+**What changed**
+- `src/country-colors.js` (new) — shared per-country color palette (hue hashed from the feature index; stable across sessions). Used by both the 2D maps and the 3D globe so a country looks the same everywhere.
+- `src/map2d.js` — new `colored` mode: each country filled with its own hue (per-country `Path2D` cache built at fit time) in **all three projections**. Live toggle via a new `setColored()` on the renderer interface.
+- `src/map-styles.js` — `getColored()`/`setColored()` persistence under the `coloredCountries` key.
+- `src/main.js` / `src/index.html` — a **Colored countries** button on the Check-In Beacon tile (On/Off, live, persisted) and a **QR** button next to the public key that opens a modal with a scannable QR code + copyable key text (`qrcode` lib, generated locally — no network).
+- `package.json` — added `qrcode`.
+
+**Verification**
+- `npm test` — **32/32 pass, 61/61 asserts.**
+- `node test/smoke-map2d.js` — green; now also toggles colored mode on all three styles and checks the shared palette (177 entries, 78 unique).
+- `node --check` on all changed `.js` — OK.
+- Android: `npm test` 23/23 pass; `build:renderer` bundles `qrcode` + colored mode.
+
+**Known limits / next steps**
+- `pear run` GUI still broken on this Linux box (environmental Pear boot issue) — visual verification deferred to a working machine; renderer logic is smoke-tested in Node.
+- QR modal renders only when the app has a public key from the main process (normal boot).
+
+---
+
+## 2026-08-05 — User-selectable 2D maps (desktop; no 3D globe)
+
+**Status:** the desktop build now ships **user-selectable 2D canvas maps only** — the 3D WebGL globe is gone, matching the request for a maps-first desktop. Ported the map-style system from the Android repo.
+
+**What changed**
+- `src/map-styles.js` (new) — registry of 3 styles: **Map** (equirectangular, Taiwan-centered ~121°E), **Map — Centered on Me**, **Map — Dymaxion** (Fuller's Airocean). Persisted under the `mapStyle` localStorage key; backward-compatible migration for the old `globe=3d/2d` key and the old `map-world`/`map-taiwan` ids (all → `map`).
+- `src/renderer.js` (new) — dispatcher that reads the chosen style and builds the matching 2D renderer. Desktop is maps-only, so it always returns a 2D map (no WebGL/globe path).
+- `src/map2d.js` — replaced with the `d3-geo`/`d3-geo-polygon` version: three projections, plus **Path2D caching** (land + graticule rendered once per fit, then blitted through the zoom/pan affine transform) so Dymaxion pan/zoom is smooth instead of re-projecting all 177 countries every frame. `map-center` re-centers on the self pin on each check-in (`rotate([-lng,-lat])`).
+- `src/globe-renderer.js` — **removed** (no 3D globe on desktop).
+- `src/main.js` / `src/index.html` — `initGlobe` now calls `createRenderer`; Settings modal gained a **Map style** `<select>` (populated from `MAP_STYLES`, applied on Save with a reload); the dev-panel toggle was repurposed from "Try 3D globe" to a **"Next map"** cycler. The `pear-pipe` connection layer is untouched.
+- `package.json` — added `d3-geo` + `d3-geo-polygon`.
+
+**Verification**
+- `npm test` — **32/32 pass, 61/61 asserts.**
+- `node test/smoke-map2d.js` — green for all three styles (`map`, `map-center`, `map-dymaxion`) with the Path2D cache path and `map-center` recenter exercised.
+- `node --check` on every changed `.js` — all OK.
+- map-styles migration checked in Node (`globe=3d`/`globe=2d`/`map-world`/`map-taiwan` → `map`; `map-dymaxion` retained).
+
+**Known limits / next steps**
+- `pear run` GUI is still broken on this Linux box (environmental Pear boot issue), so the on-screen maps were not visually verified here; the 2D renderer + dispatcher are smoke-tested in Node, consistent with the repo's existing approach.
+- Possible follow-ups: add a 3D globe back as an opt-in (re-import `globe-renderer.js` from Android), and update the README's map-style list as options evolve.
+
+---
+
 ## 2026-08-02 — Removed auto-center/jump on check-in
 
 The earlier "auto-center the map/globe on your pin on check-in" behavior caused the map to jump/re-center. Axed it: removed the `centerOn` calls from the renderer's `self` handler and `onManualCheckin`, and deleted the now-unused `centerOn` method from both `src/map2d.js` and `src/globe-renderer.js` (keeping the two renderer interfaces in sync). The self pin still updates immediately on a manual check-in; the viewport no longer moves. `npm test` 32/32.
