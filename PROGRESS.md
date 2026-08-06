@@ -8,6 +8,19 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-06 — Broadcast-choice flow (Use GPS / Manual); Settings manual section removed
+
+**Status:** shipped on both platforms.
+
+**What changed**
+- Tapping **Broadcast coordinates** now opens a choice modal: **Use GPS** (broadcast a normal fix; if no GPS, says "No GPS available — use manual" and opens the manual modal) or **Manual** (the city-search / coordinates prompt). This is where manual entry + city search live now.
+- Removed the Settings **Manual location** section (one-off "Check in here", the scheduled-override toggle, and its inputs) and the whole main-process manual-GPS override: `manual:set` handler, `settings.manual`, scheduler `getManual`/`manualCoords`, and the boot `manual` field. One-off manual broadcasts still go through `checkin:manual`.
+- Docs (README/ARCHITECTURE/TESTING/AGENTS) updated.
+
+**Verification:** `npm test` green in both repos; renderers bundle.
+
+---
+
 ## 2026-08-06 — City search for the no-GPS fallback (0.3.0)
 
 **Status:** shipped on both platforms as **0.3.0**.

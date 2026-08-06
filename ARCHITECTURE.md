@@ -19,7 +19,7 @@ Each user keeps an **append-only Hypercore log** of their own GPS check-ins; for
 | **Pair-wise swarm** | One Hyperswarm; joins a unique topic per contact. Carries the handshake and replication streams. | `src/swarm.js` (main process) |
 | **Local log** | Your own Hypercore. Each check-in appends `{lat,lng,timestamp,name}` — `name` is your self-chosen display name (Settings → Your name). | `src/main/corelog.js` (filesystem storage under `data/cores/`) |
 | **Scheduler** | Fires at your chosen interval, gets a fix, appends to your log. | `src/main/scheduler.js` (main process; GPS crosses the pipe) |
-| **Settings** | Broadcast interval, core-rotation generation, manual-GPS override. | `src/main/settings.js` (JSON file `data/settings.json`) |
+| **Settings** | Broadcast interval, core-rotation generation, self name, precision dial. | `src/main/settings.js` (JSON file `data/settings.json`) |
 | **Main orchestrator** | Boots the P2P stack and routes pipe messages. | `src/main/app.js`, wired by `index.js` |
 | **Staleness** | Decides active / stale / offline from a contact's last timestamp vs. their interval. | `src/staleness.js` (renderer) |
 | **Globe** | Renders self + contact pins, arcs, and the click overlay as a **2D canvas map** with a user-selectable projection. | `src/renderer.js` (dispatcher), `src/map-styles.js`, `src/map2d.js` — renderer |
@@ -47,7 +47,7 @@ The app is split across the two Pear processes, bridged by the **Pear pipe** (ne
 ### Broadcasting (you → your contacts)
 
 1. The **scheduler** (main process) fires at your interval.
-2. If the **manual-GPS override** is enabled, it uses the stored manual coords directly. Otherwise it sends `gps:request` to the renderer, which does a single `navigator.geolocation.getCurrentPosition` fix and replies `gps:result`. On failure the scheduler retries once after 60s; it never appends a null location.
+2. The scheduler sends `gps:request` to the renderer, which does a single `navigator.geolocation.getCurrentPosition` fix and replies `gps:result`. On failure the scheduler retries once after 60s; it never appends a null location. One-off manual / city-search broadcasts skip GPS entirely: the renderer sends `checkin:manual` with the chosen coordinates.
 3. The fix `{lat, lng, timestamp}` is appended to **your local Hypercore** (in the main process), and a `self` push tells the renderer to move your blue pin.
 4. Because your contacts are already **replicating** your core (over the pair-wise swarm connection), the new block flows to them automatically. No push server, no message broker.
 

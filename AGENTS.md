@@ -39,10 +39,10 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 │  │  ├─ fsx.js          # bare-fs/bare-path with fs/path fallback + JSON helpers
 │  │  ├─ identity.js     # keypair → data/identity.json
 │  │  ├─ contacts.js     # contacts store → data/contacts.json
-│  │  ├─ settings.js     # interval + core generation + manual-GPS override + precision → data/settings.json
+│  │  ├─ settings.js     # interval + core generation + self name + precision → data/settings.json
 │  │  ├─ precision.js    # coarse-location grid snap (snapCoords) + allowed km options (pure)
 │  │  ├─ corelog.js      # local Hypercore (filesystem) + contact-core replication (RAM)
-│  │  └─ scheduler.js    # broadcast timer; GPS crosses the pipe; manual-override short-circuit
+│  │  └─ scheduler.js    # broadcast timer; GPS crosses the pipe
 │  ├─ db.js              # IndexedDB wrapper (kept for the contacts unit test only)
 │  ├─ contacts.js        # IndexedDB contact CRUD (kept for the contacts unit test only)
 │  ├─ idb-storage.js     # RAS@3 IndexedDB Hypercore backend (legacy; unused by the live app)

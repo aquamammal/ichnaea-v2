@@ -12,7 +12,7 @@ A privacy-first, peer-to-peer location check-in app built on **Pear / Holepunch*
 - Lets you add contacts by pasting their **Base64 public key** (shared out-of-band: email, QR, a website, in person).
 - Derives a **unique pair-wise swarm topic** for each contact so only the two of you ever meet in that swarm.
 - Broadcasts your GPS location on a **configurable schedule** (default: once per day).
-- Optional **manual location override**: enter coordinates by hand to check in without GPS, or to make scheduled check-ins use a fixed location.
+- Optional **manual location / city search**: tap **Broadcast coordinates** and choose **Manual** to enter coordinates by hand or search a city — useful when GPS is unavailable. No settings needed.
 - Replicates each contact's **Hypercore** append-only log and renders their last check-in as a pin on the map.
 - Colors pins by freshness: **green = active**, **gray = stale**, and removes pins that go silent too long.
 - **User-selectable 2D maps:** pick a projection in **Settings → Map style** — **Map** (equirectangular, Taiwan-centered), **Map — Centered on Me** (re-centers on your check-in), or **Map — Dymaxion** (Fuller's Airocean projection). All rendering uses the bundled Natural Earth world outline — **no map tiles, no CDN, zero third-party requests**.
@@ -172,7 +172,7 @@ The desktop update checker (`src/updates.js`, `REPO = aquamammal/ichnaea-v2`) re
 ### Linux
 - **Node:** use the NodeSource instructions above, or `nvm`.
 - **Maps:** the app uses **2D canvas maps** (user-selectable projection) — no WebGL or GPU needed, so it works on every machine.
-- **Location:** `navigator.geolocation` may report unavailable on some desktop Linux setups; use **Settings → Manual location** to check in without GPS (see below).
+- **Location:** `navigator.geolocation` may report unavailable on some desktop Linux setups; tap **Broadcast coordinates → Manual** to check in without GPS (city search or typed coordinates).
 
 ---
 
@@ -215,12 +215,12 @@ Open **Settings** to choose how often you check in:
 
 When the timer fires the app requests your GPS position once (geolocation runs in the renderer; the main process asks for a fix over the pipe), appends `{ lat, lng, timestamp }` to your local Hypercore, and makes it available to your connected contacts.
 
-### Manual location override
+### Broadcasting without GPS (Manual / city search)
 
-Open **Settings → Manual location** to enter coordinates by hand:
+Tap **Broadcast coordinates** and choose:
 
-- **Check in here** — append a one-off check-in at the entered lat/lng, skipping GPS entirely. Useful when there is no GPS or you want to report a specific spot.
-- **Use manual location for scheduled check-ins** — when enabled, every scheduled check-in uses the stored manual coords instead of requesting a GPS fix. The setting (coords + flag) is persisted in the main process, so it survives reload. While it's on, the GPS status line shows `manual: lat,lng`.
+- **Use GPS** — get a normal GPS fix and broadcast. If there's no GPS, it says "No GPS available — use manual."
+- **Manual** — enter coordinates by hand **or search a city** (bundled GeoNames cities5000 dataset, ~68k cities, searched locally — zero telemetry) to fill them in. Then **Broadcast**.
 
 Latitude must be −90..90 and longitude −180..180 (validated in the UI).
 

@@ -42,14 +42,14 @@
 - [ ] **Tab Visibility (Backgrounding):** Switch to another browser tab for 5 minutes. Return to the app. The GPS timer should fire immediately (or resume correctly) without spamming multiple missed updates. (Prevents battery drain on mobile).
 - [ ] **GPS timeout/failure:** (dev) force a geolocation error → single retry after 60s, then graceful give-up until the next scheduled fire.
 
-## 4b. Manual location override
+## 4b. Manual broadcast (no GPS)
 
-- [ ] **One-off check-in:** Open **Settings → Manual location**, enter a valid lat (−90..90) and lng (−180..180), click **Check in here** → your **blue** self-pin moves to those coords, no GPS permission prompt appears.
-- [ ] **Range validation:** Enter lat `95` or lng `-200` → inline error in the modal, nothing appended.
-- [ ] **Scheduled override ON:** Enter coords, enable **"Use manual location for scheduled check-ins"**, save → the GPS status line shows `manual: lat,lng`. (dev) set a short interval → each scheduled fire uses the manual coords (no GPS request).
-- [ ] **Persistence:** With the override ON, reload the app → the toggle is still on, the coords are still filled, and the status line still shows `manual: …`.
-- [ ] **Override OFF:** Disable the toggle, save → scheduled check-ins go back to requesting GPS.
-- [ ] **Works with GPS denied:** Deny location permission, enable the override → scheduled check-ins still succeed using the manual coords (no "location unavailable").
+- [ ] **Choice modal:** tap **Broadcast coordinates** → a modal offers **Use GPS** and **Manual**.
+- [ ] **Use GPS works:** tap **Use GPS** with GPS available → you broadcast, no manual prompt.
+- [ ] **Use GPS, no GPS:** tap **Use GPS** with GPS denied/unavailable → it says "No GPS available — use manual" and opens the manual modal.
+- [ ] **Manual one-off:** tap **Manual**, enter valid lat/lng, **Broadcast** → your blue self-pin moves there, no GPS prompt.
+- [ ] **Range validation:** enter lat `95` or lng `-200` → inline error, nothing appended.
+- [ ] **City search:** in the manual modal, type a city → matches appear; tap one → lat/lng fill; **Broadcast** sends it.
 
 ## 5. Receiving & rendering contacts
 
@@ -111,7 +111,7 @@
 - [ ] **Stability:** the fingerprint for a given pasted key is identical across restarts and across the two app instances.
 - [ ] **Precision dropdown:** **Settings → Location precision** lists Off / ~5 / ~10 / ~25 / ~50 km, reflecting the saved value on open and after reload.
 - [ ] **Snap effect:** set **~50 km**, save, then **Broadcast coordinates** (or check in manually) → your self pin lands on a ~50 km grid point; contacts' pins (from their replicated check-in) are likewise coarsened. Setting **Off** restores your exact position.
-- [ ] **Covers manual check-ins:** with precision set, a manual "Check in here" is also snapped to the grid.
+- [ ] **Covers manual check-ins:** with precision set, a manual (city-search or typed) broadcast is also snapped to the grid.
 - [ ] **No side effects:** fingerprint + precision do not affect P2P connectivity, other settings, or any map style.
 
 ## 5h. Log-key rotation + at-rest encryption
