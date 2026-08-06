@@ -6,6 +6,18 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+---
+
+## 2026-08-06 — Updater: plugin-bridge fix (0.2.12) + download hardening (0.2.14)
+
+**Diagnosed live via Chrome DevTools Protocol on the phone (WebView remote debugging).**
+1. **"Update now" did nothing — the native plugins never reached the web bridge.** Capacitor discovers plugins from `assets/capacitor.plugins.json` (loaded before the bridge initializes); registering only in `MainActivity` was too late, so `window.Capacitor.Plugins.IchnaeaUpdater` never existed and the flow fell to a silent `window.open` no-op. Fixed in **0.2.12**: both plugins added to the manifest, `scripts/plugins.mjs` re-appends them after `cap sync` (hooked into `build:apk`), `MainActivity` manual registration removed. Verified on-device: `isPluginAvailable` true.
+2. **Downloads stalled on the user's Wi-Fi — a network issue, not the app.** The phone's network can reach `api.github.com` (JSON check works) but **not** GitHub's file hosts (`objects.githubusercontent.com`, `raw.githubusercontent.com`, `codeload.github.com`) — every APK download hangs. Hardened in **0.2.14**: the renderer downloads via the WebView fetch (30s timeout) and passes base64 to the plugin; a second download URL (committed `dist/` APK via `raw.githubusercontent.com`) is attempted as a fallback; failures now show a clear error + the direct URL instead of hanging.
+
+**Status:** phone updated to **0.2.14** via adb (data preserved). In-app update is code-fixed; on this Wi-Fi it will still fail to download until the network can reach GitHub file hosts (try cellular or another network).
+
+---
+
 ## 2026-08-05 — v0.2.12 (fix: native plugins never reached the web bridge)
 
 **Status:** bumped both repos to **0.2.12** (Android `versionCode 14`). Android APK shipped to `dist/ichnaea-android-v0.2.12-debug.apk` (SHA `a2db62db…4b9e`).
