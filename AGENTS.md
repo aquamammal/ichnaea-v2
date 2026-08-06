@@ -47,6 +47,7 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 │  ├─ contacts.js        # IndexedDB contact CRUD (kept for the contacts unit test only)
 │  ├─ idb-storage.js     # RAS@3 IndexedDB Hypercore backend (legacy; unused by the live app)
 │  └─ scheduler.js       # old renderer web scheduler (legacy; unused by the live app)
+├─ browser-qa/           # standalone-renderer UI-QA harness (build.mjs, serve.mjs, stub-pipe.js)
 ├─ data/                 # runtime state (identity, contacts, settings, cores) — gitignored
 ├─ test/                 # brittle unit tests
 ├─ README.md  PROGRESS.md  TESTING.md  ARCHITECTURE.md  SECURITY.md
@@ -61,8 +62,9 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 
 - Install deps: `npm install`
 - Dev app: `npm run dev` (= `pear run -d .`)
+- **Browser UI-QA (when the Pear window can't open — see Known risks):** `npm run qa` builds `browser-qa/qa-bundle.js` + `harness.html` (esbuild of `src/main.js` with `pear-pipe` aliased to `browser-qa/stub-pipe.js`) and serves them on :8765 → open `http://localhost:8765/browser-qa/harness.html`. `npm run qa:build` / `npm run qa:serve` run the two steps separately.
 
-**Expected:** a Pear desktop window opens showing a full-viewport 2D map with a top-left control panel and a bottom-right contacts list.
+**Expected:** a Pear desktop window opens showing a full-viewport 2D map with a top-left control panel and a bottom-right contacts list (on a healthy Pear runtime); on this box, use the browser harness instead — it renders the same UI against a simulated main process.
 
 ## How to test
 
@@ -97,7 +99,7 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 - **The only outbound request is the manual update check.** `src/updates.js` fetches the app's GitHub `releases/latest` **only when the user taps Settings → Check for updates**. Never check on boot or in the background — an automatic check would violate zero-telemetry. Keep `APP_VERSION` in `updates.js` in sync with `package.json` on every version bump.
 - **The desktop build defaults to 2D maps, with the 3D globe opt-in.** `src/renderer.js` is the map-style dispatcher: globe styles (`globe-wireframe`/`globe-texture`/`globe-countries`) build `src/globe-renderer.js` (3D WebGL via `globe.gl` + `three`), falling back to the 2D canvas map from `src/map2d.js` when WebGL is unavailable or the globe fails. The default style stays the 2D Map (`DEFAULT_ID = 'map'` in `map-styles.js`). Both renderers share the same public interface, so `src/main.js` never knows which it got.
 - `pear run` does not pipe renderer console to stdout. Keep the on-page fatal-error overlay in `src/main.js` so load errors are visible; main-process modules can be smoke-tested in plain Node with a stub pipe (see PROGRESS.md).
-- **Environmental:** in some environments `pear run -d .` stops in Pear's own `pear-electron` boot bundle with `SyntaxError: Unexpected token ':'` before app code loads (the sibling v1 project fails identically). This is a Pear runtime/CLI issue, not an app bug.
+- **Environmental:** on some boxes `pear run -d .` stops in Pear's own `pear-electron` boot bundle with `SyntaxError: Unexpected token ':'` before app code loads (the sibling v1 project fails identically). This is a Pear runtime/CLI issue, not an app bug. **Root cause (diagnosed):** `pear-electron@1.9.0-rc.0`'s `runtime.js` spawns the Electron app binary with the compiled **`.bundle` as the first positional arg**, so Electron's `default_app` treats it as a JS app-path and runs it via the plain CJS loader (the JSON `.bundle` → `SyntaxError`) instead of using `pear-runtime-app/resources/app/boot.js` (which installs a working `require.extensions['.bundle']` hook). Verified: launching that same electron binary as `<electron> <resources/app> <bundle> ...` boots the bundle with no error. No passwordless sudo on this box → can't install a fixed global Pear. The **workaround is the browser UI-QA harness** (`npm run qa`, above), which visually verifies the renderer/globe/panels against a stub pipe. See PROGRESS.md for the full write-up.
 
 ## Governance
 

@@ -139,6 +139,17 @@ A Pear desktop window opens showing the world map and the control panels.
 npm test
 ```
 
+### Step 7: Browser UI-QA (when the Pear desktop window won't open)
+
+On machines where the Pear GUI can't launch (e.g. the known Linux Electron-bundle issue), you can still visually QA the renderer — map, 3D globe, contacts panel, NEW badges, staleness colors, offline queue — **in a normal browser against a simulated main process**:
+
+```bash
+npm run qa
+# open http://localhost:8765/browser-qa/harness.html
+```
+
+The harness (`browser-qa/`) bundles the real `src/main.js` with esbuild, substituting `pear-pipe` for a local stub that feeds fixture contacts + live updates. It's read-only and makes no network calls. See `TESTING.md` § 0b for the full checklist.
+
 ---
 
 ## Releasing (desktop)

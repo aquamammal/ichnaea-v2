@@ -40,6 +40,8 @@ The app is split across the two Pear processes, bridged by the **Pear pipe** (ne
 - *Main → renderer (unsolicited pushes):* `peers`, `contact:update`, `contact:remove-pin`, `self`, `status`, and `gps:request`.
 - *Geolocation* is browser-only, so when the main-process scheduler fires it sends `gps:request` and the renderer answers with `gps:result` (`{lat,lng}` or `{error}`). The renderer renders the globe **first**, before wiring the pipe, so a slow or absent main process never blanks the page.
 
+**Standalone renderer QA.** Because the renderer is a thin pipe client, it can run **without the Pear GUI** (which can't open a window on some Linux boxes — see PROGRESS.md). `browser-qa/` bundles `src/main.js` for the browser with esbuild and substitutes `pear-pipe` with a local **stub pipe** (`browser-qa/stub-pipe.js`) that answers `boot` with fixture contacts and replays a scripted live timeline. This yields a normal HTML page (`browser-qa/harness.html`) that renders the 2D map/3D globe and panels against a simulated main process, served by `browser-qa/serve.mjs`. It is dev-only and makes no network calls. See TESTING.md § 0b.
+
 ---
 
 ## Data flow

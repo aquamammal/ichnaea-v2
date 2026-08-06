@@ -21,6 +21,7 @@ The "went quiet" notification (#9) is produced by the renderer's 30s staleness s
 - **No servers, no telemetry.** There is no central service to breach or to log your movements. Data flows directly between the two peers.
 - **Offline rendering, zero third-party requests.** The map is drawn from the bundled Natural Earth world outline (`src/assets/world.js`) via local `d3-geo` projections — equirectangular, self-centered, or Dymaxion. The colored-countries toggle uses the same local data, and the public-key QR code is generated and scanned locally (`qrcode` for display, `jsqr` + `getUserMedia` for camera scanning — the stream never leaves the device). There are **no map-tile servers, no CDN, no third-party requests** involved, so no remote service learns when or where you look.
 - **The only outbound request is the manual update check.** **Settings → Check for updates** fetches the app's GitHub `releases/latest` — but only when the user taps it. There is no traffic on boot or in the background; disabling the check is as simple as never tapping it. Everything else (P2P replication, rendering, QR, GPS) is peer-to-peer or local.
+- **Dev-only browser QA harness is local.** `browser-qa/` (the standalone-renderer UI-QA tool) runs the renderer against a simulated main process with fixture data; it makes **no network calls**, never touches `data/`, and is not part of any shipped app. It exists purely so the desktop renderer can be visually QA'd on boxes where the Pear GUI can't open a window.
 
 ---
 

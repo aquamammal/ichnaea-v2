@@ -8,6 +8,26 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-06 — Desktop GUI blocker: root cause diagnosed + repeatable browser UI-QA harness
+
+**Status:** GUI still can't launch on this box (environmental; root unavailable), but the blocker is now precisely diagnosed and the renderer can be visually QA'd via a new harness.
+
+**Root cause (finally pinned down, not just "the bundle crashes"):**
+- `pear run -d .` boots the **main process** fine (index.js → `pear-electron/runtime.js` → spawns the Electron app binary). The crash is purely in the **GUI wrapper**.
+- `pear-electron@1.9.0-rc.0`'s `runtime.js` spawns the Electron app as `<electron> <bundle> --rti <info> .` — i.e. it passes the compiled **`.bundle` as the first positional arg**. The `pear-runtime-app` (Electron) binary is *supposed* to use its own `resources/app/boot.js`, which installs a `require.extensions['.bundle']` hook and then `require`s the bundle by path (that hook is correct — `bare-bundle@1.10.0` parses the bundle fine, `main` = `pear-electron/boot.js`).
+- But because the bundle is the **first positional arg**, Electron's `default_app` treats it as a JS **app-path** and runs it via the plain `_extensions..js` loader → the JSON `.bundle` is compiled as JS → `SyntaxError: Unexpected token ':'` before any window opens. Verified: launching the same electron binary as `<electron> <resources/app> <bundle> ...` (app path first) boots boot.js and loads the bundle with **no** SyntaxError.
+- No passwordless sudo → the "install a fixed global Pear with root" path is unavailable; `pear-runtime` migration (Pear 3 removed `pear run`) would require reworking the electron launch or upgrading pear-electron (1.8/1.9 are prerelease).
+
+**What changed — a repeatable UI-QA workaround (`browser-qa/`):**
+- The renderer is now viewable **standalone in any browser** against a simulated main process. `browser-qa/stub-pipe.js` implements the exact `pear-pipe` surface `src/main.js` uses, answers `boot` with realistic fixture state (4 contacts across active/stale/offline/never + self + offline queue), and replays a scripted live timeline (peer status, a fresh contact check-in → NEW badge, a self check-in, an offline-queue sync).
+- `node browser-qa/build.mjs` bundles `src/main.js` for the browser with esbuild (aliasing `pear-pipe` → the stub) and regenerates `browser-qa/harness.html` from the real `src/index.html` so it can't drift. `node browser-qa/serve.mjs` serves it (rewrites `/browser-qa/assets/*` → `src/assets/*` so city search data resolves). Open `http://localhost:8765/browser-qa/harness.html`.
+- **Verified in headless Chrome:** contacts render with real 4-word fingerprints, staleness dots (green/red/no-pin), NEW badges, "1 contact connected", "checked in just now", and "Synced 2 offline check-ins" all appear with zero JS errors. Globe/2D-map live updates are now visible without the Pear GUI.
+- `esbuild` added to `devDependencies` (was Android-only; the handoff forbids only `pear` as a devDep). Build artifacts (`qa-bundle.js`, `harness.html`) are gitignored; source is committed.
+
+**Immediate next step:** use the harness to live-verify the desktop 3D globe (#10) and quiet-contact notifications (#9) visually; then do the same for the new "Ask them to check in" UI when it lands.
+
+---
+
 ## 2026-08-06 — Broadcast-choice flow (Use GPS / Manual); Settings manual section removed
 
 **Status:** shipped on both platforms.

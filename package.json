@@ -18,10 +18,14 @@
   "scripts": {
     "dev": "pear run -d .",
     "dev:sw": "LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe pear run -d .",
+    "qa:build": "node browser-qa/build.mjs",
+    "qa:serve": "node browser-qa/serve.mjs",
+    "qa": "node browser-qa/build.mjs && node browser-qa/serve.mjs",
     "test": "brittle test/*.test.js"
   },
   "devDependencies": {
     "brittle": "^3.0.0",
+    "esbuild": "^0.28.1",
     "fake-indexeddb": "^6.2.5",
     "pear-interface": "^1.0.0"
   },

@@ -15,6 +15,10 @@ Thumbs.db
 npm-debug.log*
 *.log
 
+# Browser UI-QA harness build artifacts (rebuilt with: node browser-qa/build.mjs)
+browser-qa/qa-bundle.js
+browser-qa/harness.html
+
 # Local AI handoff/context docs (not part of the repo)
 handoff.md
 context.md
