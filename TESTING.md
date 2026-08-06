@@ -171,6 +171,19 @@ npm run qa          # builds browser-qa/qa-bundle.js + harness.html, then serves
 - [ ] **Android permission:** the first launch requests notification permission (Android 13+); granting enables the alerts.
 - [ ] **Local-only:** notifications carry no location; nothing is transmitted.
 
+## 5n. "Ask them to check in" (opt-in location request)
+
+Two-party: A (sender) and B (receiver), both connected.
+
+- [ ] **Ask over a live connection:** A taps **Ask** on B's row → A shows "Check-in request sent"; B (with **Honor location requests** ON) broadcasts a normal check-in that A receives as a fresh pin update.
+- [ ] **Receiver honors only when opted in:** B has the toggle **OFF** (default) → A's **Ask** is sent but B does nothing (silently ignored); B's pin does not update. A cannot tell whether B received it.
+- [ ] **Offline receiver:** with B disconnected, A taps **Ask** → A shows "<name> is offline right now"; nothing is queued.
+- [ ] **Sender rate-limit:** A taps **Ask** twice on the same contact within ~5 min → the second is refused with "You asked recently — try again in a few minutes".
+- [ ] **Receiver rate-limit:** with the toggle ON, B won't honor more than one ask per contact per ~5 min.
+- [ ] **A honored ask is a normal check-in:** the broadcast respects B's precision snap (if set) and updates B's self pin.
+- [ ] **Settings toggle persists:** toggling **Honor location requests from contacts** survives a reload (stored in `settings.json`).
+- [ ] **Policy unit test:** `npm test` → `test/checkin-request.test.js` covers honor/rate-limit/not-enabled.
+
 ## 5m. City search (no-GPS fallback)
 
 - [ ] **Search works:** tap **Broadcast coordinates** with GPS off (or denied) → the modal shows a search box. Type a city (e.g. "Tokyo") → matches appear with coordinates, most populous first.

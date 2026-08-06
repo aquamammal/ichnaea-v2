@@ -40,6 +40,7 @@ const els = {
   citySearch: $('city-search'), cityResults: $('city-results'),
   btnEncrypt: $('btn-encrypt'), encryptStatus: $('encrypt-status'), encryptDetail: $('encrypt-detail'),
   quietNotify: $('quiet-notify'),
+  honorLoc: $('honor-location-requests'),
   pinScale: $('set-pinsize'), pinsizeVal: $('pinsize-val'),
   pinOverlay: $('pin-overlay'), pinName: $('pin-name'), pinTime: $('pin-time'), pinAgo: $('pin-ago'), pinStatus: $('pin-status'), pinCoords: $('pin-coords'), pinFingerprint: $('pin-fingerprint'),
   toast: $('toast'), devPanel: $('dev-panel'), devStatus: $('dev-status'), versionTag: $('version-tag')
@@ -115,6 +116,7 @@ const state = {
   arcs: getArcs(),
   selfName: '',
   precisionKm: 0,
+  honorLocationRequests: false,
   atrest: false
 }
 
@@ -453,6 +455,11 @@ function renderContactsList () {
     rm.textContent = '×'
     rm.title = 'Remove contact'
     rm.addEventListener('click', (e) => { e.stopPropagation(); onRemoveContact(c) })
+    const ask = document.createElement('button')
+    ask.className = 'ask'
+    ask.textContent = 'Ask'
+    ask.title = 'Ask them to check in now (only if they allow location requests)'
+    ask.addEventListener('click', (e) => { e.stopPropagation(); onAskCheckin(c) })
     const top = document.createElement('div')
     top.className = 'contact-top'
     if (unreadIds.has(c.id)) {
@@ -462,7 +469,7 @@ function renderContactsList () {
       badge.textContent = 'NEW'
       top.append(badge)
     }
-    top.append(dot, name, ago, rm)
+    top.append(dot, name, ago, ask, rm)
     item.appendChild(top)
     if (typeof c.lat === 'number' && typeof c.lng === 'number') {
       const coords = document.createElement('div')
@@ -526,6 +533,21 @@ async function onRemoveContact (c) {
   }
 }
 
+// "Ask them to check in": ask a verified contact to broadcast a normal check-in.
+// The request only goes out over an active connection; the receiver only honors
+// it if they've enabled "Honor location requests from contacts".
+async function onAskCheckin (c) {
+  const name = c.nickname || c.lastName || 'contact'
+  try {
+    const res = await request('checkin:request', { contactId: c.id })
+    if (res && res.sent) toast('Check-in request sent to ' + name)
+    else if (res && res.reason === 'rate-limited') toast('You asked recently — try again in a few minutes')
+    else toast(name + ' is offline right now')
+  } catch (err) {
+    toast('Request failed: ' + String(err.message || err))
+  }
+}
+
 // --- UI wiring -----------------------------------------------------------------
 function initUI () {
   // Frequency dropdowns: minutes 1..59, hours 1..48, days 1..30.
@@ -579,6 +601,7 @@ function initUI () {
     if (els.setSelfName) els.setSelfName.value = state.selfName
     if (els.setPrecision) els.setPrecision.value = String(state.precisionKm)
     if (els.quietNotify) els.quietNotify.checked = getQuietNotify()
+    if (els.honorLoc) els.honorLoc.checked = state.honorLocationRequests === true
     syncEncryptUI()
     openModal(els.modalSet)
   })
@@ -906,6 +929,10 @@ async function onSaveSettings () {
         state.precisionKm = km
       }
     }
+    if (els.honorLoc && els.honorLoc.checked !== state.honorLocationRequests) {
+      state.honorLocationRequests = els.honorLoc.checked
+      await request('settings:set', { key: 'honorLocationRequests', value: state.honorLocationRequests })
+    }
     closeModal(els.modalSet)
     toast('Settings saved')
     // Map style change needs a reload (the renderer is built once at boot).
@@ -1102,6 +1129,7 @@ async function loadState () {
   seedUnread(state.contacts)
   state.selfName = res.selfName || ''
   state.precisionKm = typeof res.precisionKm === 'number' ? res.precisionKm : 0
+  state.honorLocationRequests = res.honorLocationRequests === true
   if (els.setPrecision) els.setPrecision.value = String(state.precisionKm)
   if (res.selfLoc) state.globe.setSelf(res.selfLoc)
   // Restore each contact's cached pin at boot (green/yellow/red by staleness),

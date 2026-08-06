@@ -8,6 +8,22 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-06 — "Ask them to check in" (opt-in peer location request) → 0.3.4
+
+**Status:** shipped on both platforms as **0.3.4**.
+
+**What changed — a deliberately NOT-a-"force" location request:**
+- Each contact row now has an **Ask** button. Tapping it sends an opt-in "please broadcast a check-in" message to that contact **over their active, verified connection only** (if they're offline, the UI says so — nothing is queued or stored).
+- The receiver honors it **only** if they've enabled the new **Settings → "Honor location requests from contacts"** toggle (default **OFF**, stored in `settings.json` as `honorLocationRequests`). When off, the ask is **silently ignored** (no reply at all, so the requester can't even tell it was received).
+- **Rate-limited both ways** (5 min per contact): the sender can't spam asks (`src/main/checkin-request.js` `canSendCheckinRequest`), and the receiver won't broadcast repeatedly for the same contact (`shouldHonorCheckinRequest`). Limits are in-memory (not persisted).
+- On the receiver side, a honored ask triggers a **normal check-in through the existing GPS path** (`scheduler.checkinNow()` → `doCheckin`), so precision snapping, at-rest encryption, and the offline queue all apply exactly as a scheduled broadcast.
+- **Transport:** a new `beacon-request-checkin` frame rides the existing `ichnaea-handshake` protomux channel (same mechanism as the HELLO / log-key frames, e2e-verified), so it only ever reaches a verified contact. `swarm.sendCheckinRequest(contactId)` sends it and reports whether a live conn existed.
+- New pure, unit-tested policy module: `src/main/checkin-request.js` (`test/checkin-request.test.js`). `swarm-integrity.test.js` now also guards `sendCheckinRequest`'s declaration.
+
+**Verification:** `npm test` green in both repos (537 / 510 asserts). Offline-send guard verified directly (`sendCheckinRequest` → false with no conn). The over-the-wire delivery reuses the e2e-verified handshake channel; final live two-node confirmation is pending an on-device pairing (like #9).
+
+---
+
 ## 2026-08-06 — Desktop GUI blocker: root cause diagnosed + repeatable browser UI-QA harness
 
 **Status:** GUI still can't launch on this box (environmental; root unavailable), but the blocker is now precisely diagnosed and the renderer can be visually QA'd via a new harness.
