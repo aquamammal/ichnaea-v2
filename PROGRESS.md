@@ -8,6 +8,19 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-06 — Stale/offline pins now age in color (green→yellow→red)
+
+**Status:** shipped on both platforms.
+
+**What changed**
+- Offline pins are **kept** (not removed); pins age by staleness status: **green** = fresh/active, **yellow** = stale, **red** = really old (offline). The connecting-lines arcs reuse the pin color, so arcs now carry the same status signal (blue self → green/yellow/red contact). Contact-list dots match (`.on`/`.on-stale`/`.on-offline`).
+- Removed the per-contact hue hash in favor of the status colors (both renderers: `globe-renderer.js`, `map2d.js`).
+
+**Planned (future release) — "Ask them to check in" (location request):**
+- An **opt-in** feature: a verified contact can request your location, and you auto-broadcast a normal check-in only if the receiver has enabled **"Honor location requests from contacts"** (default OFF). Rate-limited, works only over an active connection. Requires a new handshake message type + a "Ask them to check in" button. Deliberately **not** a literal "force" (privacy model). Not started; tracked here.
+
+---
+
 ## 2026-08-06 — Updater: plugin-bridge fix (0.2.12) + download hardening (0.2.14)
 
 **Diagnosed live via Chrome DevTools Protocol on the phone (WebView remote debugging).**
