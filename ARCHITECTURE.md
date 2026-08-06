@@ -134,6 +134,12 @@ When a check-in fires (`doCheckin`) while no contact is connected (`swarm.state(
 
 ---
 
+## City search (no-GPS fallback)
+
+When **Broadcast coordinates** finds no GPS fix, the "No GPS fix" modal now offers a **city search** alongside manual lat/lng entry. `src/cities.js` (renderer-safe) lazy-loads a compact GeoNames **cities5000** dataset (`src/assets/cities-data.txt`, ~68k cities, 2.4 MB) on first search and finds cities by name / ASCII name, ranking by population (dataset is pre-sorted by population desc, so a scan returns the most populous matches first). The data file is a **separate fetched asset**, not part of the JS bundle, so it only downloads when the search is actually used; it's regenerated from `cities5000.txt` by `scripts/build-cities.mjs`. A picked city fills the lat/lng fields, which then broadcast via the normal manual check-in path.
+
+---
+
 ## Quiet-contact notifications (#9)
 
 Local-only alerts when a contact goes stale/offline. The renderer's 30s staleness sweep tracks each contact's last status (`quietNotified` map) and, on a transition **into** `stale` or `offline` (never on first sight), calls `notifyQuiet(contact)`. The payload is just "X went quiet — last check-in …" — **no coordinates**. On Android this posts via the native `IchnaeaNotifyPlugin` (`POST_NOTIFICATIONS`, requested once at boot; a notification channel is created for API 26+). On desktop/browser it uses the Web `Notification` API when available. A Settings toggle (**Notify when a contact goes quiet**, default on, stored in `localStorage`) disables it. Background reliability depends on the process/WebView staying alive; the Android foreground `NodeService` keeps the main process up.

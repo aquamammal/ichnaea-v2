@@ -8,6 +8,22 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-06 — City search for the no-GPS fallback (0.3.0)
+
+**Status:** shipped on both platforms as **0.3.0**.
+
+**What changed**
+- **City search:** the "No GPS fix" modal now has a search box alongside manual lat/lng entry. `src/cities.js` lazy-loads a compact **GeoNames cities5000** dataset (`src/assets/cities-data.txt`, ~68k cities, 2.4 MB — a separate fetched asset, not in the JS bundle) and finds cities by name / ASCII name, ranked by population. Picking a city fills the lat/lng fields and broadcasts via the normal manual path.
+- Data built from `Assets/cities5000.txt` by `scripts/build-cities.mjs` (reproducible); placed in both repos' `src/assets/`.
+- Docs (README/ARCHITECTURE/TESTING/AGENTS) updated. Tests: `test/cities.test.js` (pure matching + dataset smoke + ranking).
+
+**Verification:** `npm test` green in both repos; renderers bundle.
+
+**Known limits / next steps**
+- The planned opt-in "Ask them to check in" location-request feature remains future (see PROGRESS under the color-aging entry).
+
+---
+
 ## 2026-08-06 — Stale/offline pins now age in color (green→yellow→red)
 
 **Status:** shipped on both platforms.

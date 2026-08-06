@@ -154,6 +154,14 @@
 - [ ] **Android permission:** the first launch requests notification permission (Android 13+); granting enables the alerts.
 - [ ] **Local-only:** notifications carry no location; nothing is transmitted.
 
+## 5m. City search (no-GPS fallback)
+
+- [ ] **Search works:** tap **Broadcast coordinates** with GPS off (or denied) → the modal shows a search box. Type a city (e.g. "Tokyo") → matches appear with coordinates, most populous first.
+- [ ] **Pick fills coords:** tap a match → the lat/lng fields fill; **Broadcast** sends it and the self pin moves there.
+- [ ] **No matches:** gibberish input shows "No matching cities."
+- [ ] **Offline fallback:** if the bundled city data can't load, a clear error shows and manual lat/lng entry still works.
+- [ ] **Local-only:** search never leaves the device (bundled dataset, zero telemetry).
+
 ## 6. Stale peer handling
 
 - [ ] **Stale:** (dev) set B's interval short, let `> 2×` elapse with no check-in → B's pin turns **gray**.

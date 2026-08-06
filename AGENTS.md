@@ -30,7 +30,8 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 │  ├─ updates.js         # manual GitHub Release version check (Settings → Check for updates)
 │  ├─ fingerprint.js     # 4-word key fingerprint (SHA-256 of the key; pure, renderer-safe)
 │  ├─ backoff.js         # exponential-backoff reconnect delays (pure, renderer-safe)
-│  ├─ assets/            # bundled rendering assets (Natural Earth GeoJSON + earth texture)
+│  ├─ cities.js          # city search for the no-GPS fallback (lazy-loads assets/cities-data.txt)
+│  ├─ assets/            # bundled rendering assets (Natural Earth GeoJSON + earth texture + cities-data.txt)
 │  ├─ crypto.js          # keygen, base64 keys, pair-topic derivation, encrypt stubs (shared, pure)
 │  ├─ swarm.js           # pair-wise Hyperswarm topics, handshake, connections (main process)
 │  ├─ main/              # main-process-only modules (no browser APIs)
@@ -85,7 +86,7 @@ A privacy-first, peer-to-peer **periodic check-in beacon** built on Pear/Holepun
 
 - `pear run -d` requires a path (use `pear run -d .`).
 - **The project directory path must not contain a space.** Pear URL-encodes a space to `%20` and then fails with `ERR_INVALID_PROJECT_DIR`. This is why the folder is `ichnaea-v2` (hyphen), not `ichnaea v2`.
-- **The renderer must NOT import hyperswarm, hypercore, random-access-*, or any Node builtin (`events`, `streamx`, `stream`).** The Pear renderer's module resolver does not provide Node builtins to app code — importing Hyperswarm there crashed at load with `Cannot find package 'events'` and the map never rendered. The whole P2P stack lives in the **main process** (`index.js` + `src/main/*`); the renderer (`src/main.js`) imports only `pear-pipe`, `staleness.js`, `renderer.js`, `map-styles.js`, `map2d.js`, `country-colors.js`, `scanner.js`, `updates.js`, `fingerprint.js`, `backoff.js`, `qrcode`, `jsqr`. (`fingerprint.js` and `backoff.js` are pure — no Node builtins, no DOM — so they are import-safe in the renderer and in Node tests.)
+- **The renderer must NOT import hyperswarm, hypercore, random-access-*, or any Node builtin (`events`, `streamx`, `stream`).** The Pear renderer's module resolver does not provide Node builtins to app code — importing Hyperswarm there crashed at load with `Cannot find package 'events'` and the map never rendered. The whole P2P stack lives in the **main process** (`index.js` + `src/main/*`); the renderer (`src/main.js`) imports only `pear-pipe`, `staleness.js`, `renderer.js`, `map-styles.js`, `map2d.js`, `country-colors.js`, `scanner.js`, `updates.js`, `fingerprint.js`, `backoff.js`, `cities.js`, `qrcode`, `jsqr`. (`fingerprint.js`, `backoff.js`, and `cities.js` are pure — no Node builtins, no DOM — so they are import-safe in the renderer and in Node tests; `cities.js` fetches `assets/cities-data.txt` lazily at runtime.)
 - **Geolocation is browser-only**, so GPS crosses the pipe: the main-process scheduler sends `gps:request`, the renderer answers `gps:result` (`{lat,lng}` or `{error}`). Never call `navigator.geolocation` in the main process.
 - **Persistence is on the filesystem** (main process, `data/`), not IndexedDB: identity, contacts, settings, and the local Hypercore. File access uses `bare-fs`/`bare-path` with an `fs`/`path` fallback (`src/main/fsx.js`). The renderer's IndexedDB `src/db.js`/`src/contacts.js` are kept only to keep the contacts unit test green.
 - **Hypercore is pinned to v10.** v10 accepts a **directory path** for filesystem RAF storage — `new Hypercore(dir, { keyPair, createIfMissing: true })` (verified: append + reopen + read). v11 uses a Corestore/RocksDB model we don't want. Contact cores use `random-access-memory`. Do not upgrade Hypercore without re-solving storage.
