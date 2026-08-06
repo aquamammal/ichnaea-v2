@@ -6,6 +6,22 @@ Developer log. Newest entries on top. Each entry records what was completed, kno
 
 ---
 
+## 2026-08-05 — v0.2.12 (fix: native plugins never reached the web bridge)
+
+**Status:** bumped both repos to **0.2.12** (Android `versionCode 14`). Android APK shipped to `dist/ichnaea-android-v0.2.12-debug.apk` (SHA `a2db62db…4b9e`).
+
+**Root cause (diagnosed live via Chrome DevTools Protocol on the phone):** the custom native plugins (`IchnaeaUpdater`, `IchnaeaNotify`) were registered only in `MainActivity` (`registerPlugin(...)` after `super.onCreate`), but Capacitor discovers plugins from the **`assets/capacitor.plugins.json` manifest** (loaded before the web bridge initializes). So `window.Capacitor.Plugins.IchnaeaUpdater` never existed → "Update now" silently fell back to a no-op `window.open`.
+
+**Fix:**
+- Added both plugins to `capacitor.plugins.json`.
+- Since `cap sync` regenerates that file, added **`scripts/plugins.mjs`** (re-appends the two plugins) and hooked it into `build:apk` after `cap sync`.
+- Removed the redundant `registerPlugin` calls from `MainActivity`.
+- Verified on-device via CDP: `Plugins` now exposes `IchnaeaUpdater`/`IchnaeaNotify`, `isPluginAvailable` = true for both.
+
+**Verification:** `npm test` green; on-device CDP confirms the plugins are available. A follow-up release (0.2.13) is used to verify the in-app Update now flow end-to-end.
+
+---
+
 ## 2026-08-05 — Broadcast UX: post-add nudge + no-GPS manual prompt (0.2.11)
 
 **Status:** shipped on both platforms.
