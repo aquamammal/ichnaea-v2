@@ -983,6 +983,9 @@ async function onCitySearch (query) {
     row.addEventListener('click', () => {
       els.manualCheckinLat.value = c.lat
       els.manualCheckinLng.value = c.lng
+      // Replace the partially-typed text with the full chosen city (+ country).
+      if (els.citySearch) els.citySearch.value = c.name + (c.cc ? ' (' + c.cc + ')' : '')
+      els.citySearch.blur()
       els.cityResults.innerHTML = ''
       els.manualCheckinErr.textContent = ''
     })
